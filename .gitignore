@@ -26,6 +26,7 @@
 # .idea/modules.xml
 # .idea/*.iml
 # .idea/modules
+.idea/**
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
