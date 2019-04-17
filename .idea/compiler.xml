@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="KIProjektSS19" />
+        <module name="murusgallicusminimax" />
       </profile>
     </annotationProcessing>
   </component>
