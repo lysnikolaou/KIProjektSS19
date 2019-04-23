@@ -29,6 +29,7 @@ class Board {
 
   /**
    * murusgallicus.base.Board constructor that converts a FEN string to its board representation.
+   *
    * @param fen The FEN representation of the board
    */
   Board(String fen) {
@@ -38,6 +39,7 @@ class Board {
 
   /**
    * Set board array from FEN string.
+   *
    * @param fen THE FEN string that should be stored into the board
    */
   private void setBoard(String fen) {
@@ -50,18 +52,17 @@ class Board {
       if (currentChar == '/') {
         column = 0;
         row++;
-      }
-      else if (Character.isDigit(currentChar)) {
+      } else if (Character.isDigit(currentChar)) {
         column += Character.getNumericValue(currentChar);
         column--;
-      }
-      else
+      } else
         setPieceFromChar(currentChar, row, column++);
     }
   }
 
   /**
    * The actual move generator.
+   *
    * @param player The player, whose turn it is to play('r' for Romans, 'g' for Gauls)
    * @return A list containing all the available moves
    */
@@ -77,6 +78,7 @@ class Board {
 
   /**
    * The move generator for the Roman player.
+   *
    * @return A list containing all the available moves for the roman player
    */
   private String[] generateRomanMoves() {
@@ -94,6 +96,7 @@ class Board {
 
   /**
    * The move generator for the Gaul player.
+   *
    * @return A list containing all the available moves for the gaul player
    */
   private String[] generateGaulMoves() {
@@ -110,35 +113,35 @@ class Board {
   }
 
   private void checkGaulCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
-    if (board[row + rowOff][col + colOff ] == NULL || isRomanPiece(row + rowOff,col + colOff)) {
-      Move move = new Move(squareToString(row,col), squareToString(row + rowOff,col + colOff), 1);
+    if (board[row + rowOff][col + colOff] == null || isRomanPiece(row + rowOff, col + colOff)) {
+      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), 1);
       moves.add(move);
     }
   }
 
   private ArrayList<Move> generateGaulCatapultMoves(int row, int col) {
     ArrayList<Move> moves = new ArrayList<>();
-    if(col > 2) { // throw left
+    if (col > 2) { // throw left
       checkGaulCatapultMove(row, col, 0, -2, moves);
       checkGaulCatapultMove(row, col, 0, -3, moves);
 
-      if(row > 2) { // throw left-forward
+      if (row > 2) { // throw left-forward
         checkGaulCatapultMove(row, col, -2, -2, moves);
         checkGaulCatapultMove(row, col, -3, -3, moves);
       }
     }
 
-    if(row > 2) { // throw forward
+    if (row > 2) { // throw forward
       checkGaulCatapultMove(row, col, -2, 0, moves);
       checkGaulCatapultMove(row, col, -3, 0, moves);
     }
 
-    if(col < 5) { // throw right
+    if (col < 5) { // throw right
       checkGaulCatapultMove(row, col, 0, 2, moves);
       checkGaulCatapultMove(row, col, 0, 3, moves);
 
 
-      if(row > 2) { // throw right-forward
+      if (row > 2) { // throw right-forward
         checkGaulCatapultMove(row, col, -2, 2, moves);
         checkGaulCatapultMove(row, col, -3, 3, moves);
       }
@@ -151,8 +154,8 @@ class Board {
   }
 
   private void checkRomanCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
-    if (board[row + rowOff][col + colOff ] == NULL || isGaulPiece(row + rowOff,col + colOff)) {
-      Move move = new Move(squareToString(row,col), squareToString(row + rowOff,col + colOff), 1);
+    if (board[row + rowOff][col + colOff] == null || isGaulPiece(row + rowOff, col + colOff)) {
+      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), 1);
       moves.add(move);
     }
   }
@@ -273,21 +276,24 @@ class Board {
       checkRomanCatapultMove(row, col, 3, 0, moves);
     }
 
-    if(col < 5) { // throw right
+    if (col < 5) { // throw right
       checkGaulCatapultMove(row, col, 0, 2, moves);
       checkGaulCatapultMove(row, col, 0, 3, moves);
 
-      if(row < 4) { // throw right-forward
+      if (row < 4) { // throw right-forward
         checkGaulCatapultMove(row, col, 2, 2, moves);
         checkGaulCatapultMove(row, col, 3, 3, moves);
       }
 
 
     }
+    return moves;
   }
+
 
   /**
    * Convert the board to a FEN string.
+   *
    * @return The FEN representation of the board
    */
   @Override
@@ -316,8 +322,9 @@ class Board {
    * This method gets called when en empty square is reached on the board. What this does, is counts
    * the next empty squares and returns that number(This needs to be done, so that the number of
    * empty squares gets appended to the FEN String).
-   * @param row The row index of the first empty square
-   * @param column The column index of the first empty square
+   *
+   * @param row        The row index of the first empty square
+   * @param column     The column index of the first empty square
    * @param fenBuilder The StringBuilder, which the number has to be appended to
    * @return The number of adjacent empty squares
    */
@@ -332,6 +339,7 @@ class Board {
 
   /**
    * Get the appropriate FEN character according to the piece enum.
+   *
    * @param piece The piece to convert
    * @return The FEN character that represent the piece type
    * @throws IllegalArgumentException When the piece is of an unknown type
@@ -357,9 +365,10 @@ class Board {
 
   /**
    * Set the appropriate piece enum type according to the FEN character.
+   *
    * @param fen_char The FEN character to be converted into a piece
-   * @param row The row index of the piece
-   * @param column The column index of the piece
+   * @param row      The row index of the piece
+   * @param column   The column index of the piece
    */
   private void setPieceFromChar(char fen_char, int row, int column) {
     switch (fen_char) {
@@ -385,14 +394,14 @@ class Board {
   }
 
   private boolean isRomanPiece(int row, int col) {
-    if(board[row][col] == Piece.RomanCatapult || board[row][col] == Piece.RomanTower
-            || board[row][col] == Piece.RomanWall)
-      return true;
+    return board[row][col] == Piece.RomanCatapult || board[row][col] == Piece.RomanTower
+            || board[row][col] == Piece.RomanWall;
+
   }
 
   private boolean isGaulPiece(int row, int col) {
-    if(board[row][col] == Piece.GaulCatapult || board[row][col] == Piece.GaulTower
-            || board[row][col] == Piece.GaulWall)
-      return true;
+    return board[row][col] == Piece.GaulCatapult || board[row][col] == Piece.GaulTower
+            || board[row][col] == Piece.GaulWall;
+
   }
 }
