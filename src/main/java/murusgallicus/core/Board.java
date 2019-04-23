@@ -1,7 +1,12 @@
 package murusgallicus.core;
 
+import murusgallicus.util.SquareToStringConverter;
+
 import java.util.ArrayList;
 import java.util.Collection;
+
+import static murusgallicus.util.SquareToStringConverter.squareToString;
+
 
 class Board {
 
@@ -108,16 +113,82 @@ class Board {
     return null;
   }
 
-  private ArrayList<Move> generateGaulCatapultMoves() {
-    return null;
+  private void checkGaulCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
+    if (board[row + rowOff][col + colOff ] == NULL || isRomanPiece(row + rowOff,col + colOff)) {
+      Move move = new Move(squareToString(row,col), squareToString(row + rowOff,col + colOff), 1);
+      moves.add(move);
+    }
+  }
+
+  private ArrayList<Move> generateGaulCatapultMoves(int row, int col) {
+    ArrayList<Move> moves = new ArrayList<>();
+    if(col > 2) { // throw left
+      checkGaulCatapultMove(row, col, 0, -2, moves);
+      checkGaulCatapultMove(row, col, 0, -3, moves);
+
+      if(row > 2) { // throw left-forward
+        checkGaulCatapultMove(row, col, -2, -2, moves);
+        checkGaulCatapultMove(row, col, -3, -3, moves);
+      }
+    }
+
+    if(row > 2) { // throw forward
+      checkGaulCatapultMove(row, col, -2, 0, moves);
+      checkGaulCatapultMove(row, col, -3, 0, moves);
+    }
+
+    if(col < 5) { // throw right
+      checkGaulCatapultMove(row, col, 0, 2, moves);
+      checkGaulCatapultMove(row, col, 0, 3, moves);
+
+
+      if(row > 2) { // throw right-forward
+        checkGaulCatapultMove(row, col, -2, 2, moves);
+        checkGaulCatapultMove(row, col, -3, 3, moves);
+      }
+    }
+    return moves;
   }
 
   private ArrayList<Move> generateRomanTowerMoves() {
     return null;
   }
 
-  private ArrayList<Move> generateRomanCatapultMoves() {
-    return null;
+  private void checkRomanCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
+    if (board[row + rowOff][col + colOff ] == NULL || isGaulPiece(row + rowOff,col + colOff)) {
+      Move move = new Move(squareToString(row,col), squareToString(row + rowOff,col + colOff), 1);
+      moves.add(move);
+    }
+  }
+
+  private ArrayList<Move> generateRomanCatapultMoves(int row, int col) {
+    ArrayList<Move> moves = new ArrayList<>();
+    if (col > 2) { // throw left
+      checkRomanCatapultMove(row, col, 0, -2, moves);
+      checkRomanCatapultMove(row, col, 0, -3, moves);
+
+      if (row < 5) { // throw left-forward
+        checkRomanCatapultMove(row, col, 2, -2, moves);
+        checkRomanCatapultMove(row, col, 3, -3, moves);
+      }
+    }
+
+    if (row < 4) { // throw forward
+      checkRomanCatapultMove(row, col, 2, 0, moves);
+      checkRomanCatapultMove(row, col, 3, 0, moves);
+    }
+
+    if(col < 5) { // throw right
+      checkGaulCatapultMove(row, col, 0, 2, moves);
+      checkGaulCatapultMove(row, col, 0, 3, moves);
+
+      if(row < 4) { // throw right-forward
+        checkGaulCatapultMove(row, col, 2, 2, moves);
+        checkGaulCatapultMove(row, col, 3, 3, moves);
+      }
+
+
+    }
   }
 
   /**
@@ -212,5 +283,17 @@ class Board {
         board[row][column] = Piece.GaulCatapult;
         break;
     }
+  }
+
+  private boolean isRomanPiece(int row, int col) {
+    if(board[row][col] == Piece.RomanCatapult || board[row][col] == Piece.RomanTower
+            || board[row][col] == Piece.RomanWall)
+      return true;
+  }
+
+  private boolean isGaulPiece(int row, int col) {
+    if(board[row][col] == Piece.GaulCatapult || board[row][col] == Piece.GaulTower
+            || board[row][col] == Piece.GaulWall)
+      return true;
   }
 }

@@ -23,7 +23,7 @@ public class SquareToStringConverter {
     columns.put(6, 'g');
     columns.put(7, 'h');
 
-    return (7 - row) + Character.toString(columns.get(column));
+    return Character.toString(columns.get(column)) + (7 - row);
 
   }
 }
