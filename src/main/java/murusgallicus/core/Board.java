@@ -104,9 +104,9 @@ class Board {
     for (int i = 0; i < board.length; i++) {
       for (int j = 0; j < board[0].length; j++) {
         if (board[i][j] == Piece.GaulTower)
-          moves.addAll(generateGaulTowerMoves());
+          moves.addAll(generateGaulTowerMoves(i, j));
         else if (board[i][j] == Piece.GaulCatapult)
-          moves.addAll(generateGaulCatapultMoves());
+          moves.addAll(generateGaulCatapultMoves(i, j));
       }
     }
     return movesToString(moves);
