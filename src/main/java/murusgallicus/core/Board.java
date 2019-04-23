@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import murusgallicus.util.Tuple;
 
+
 class Board {
 
   /**
