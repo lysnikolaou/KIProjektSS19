@@ -15,8 +15,11 @@ public class MovesToStringConverter {
 
     int i = 0;
     for (Move move: moves) {
-      strMoves[i++] = move.getSourceSquare() + "-" + move.getDestinationSquare() + "-" +
-          move.getNumberOfPiecesMoved();
+      if (move.getNumberOfPiecesMoved() == -1)
+        strMoves[i++] = move.getSourceSquare() + "-" + move.getDestinationSquare();
+      else
+        strMoves[i++] = move.getSourceSquare() + "-" + move.getDestinationSquare() + "-" +
+            move.getNumberOfPiecesMoved();
     }
 
     return strMoves;
