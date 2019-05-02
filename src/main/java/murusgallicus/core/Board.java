@@ -13,7 +13,7 @@ class Board {
   /**
    * An enum that contains all the piece types.
    */
-  enum Piece {
+  public enum Piece {
     RomanWall,
     RomanTower,
     RomanCatapult,
@@ -26,6 +26,25 @@ class Board {
    * The board.
    */
   Piece[][] board;
+
+  /**
+   * The player to play.
+   */
+  private char player;
+
+  /**
+   * The move indexes to be used in various methods
+   */
+  private ArrayList<Tuple<Integer>> moveIndexTuples = new ArrayList<>(Arrays.asList(
+      new Tuple<>(-1, -1),
+      new Tuple<>(-1, 0),
+      new Tuple<>(-1, 1),
+      new Tuple<>(0, 1),
+      new Tuple<>(1, 1),
+      new Tuple<>(1, 0),
+      new Tuple<>(1, -1),
+      new Tuple<>(0, -1)
+  ));
 
   /**
    * murusgallicus.base.Board constructor that converts a FEN string to its board representation.
@@ -42,19 +61,25 @@ class Board {
    *
    * @param fen THE FEN string that should be stored into the board
    */
-  private void setBoard(String fen) {
+  void setBoard(String fen) {
+    String[] boardAndPlayer = fen.split(" ");
+    String board = boardAndPlayer[0];
+    player = boardAndPlayer[1].charAt(0);
+
     int row = 0;
     int column = 0;
-    int fenLength = fen.length();
+    int boardLength = board.length();
 
-    for (int i = 0; i < fenLength; i++) {
-      char currentChar = fen.charAt(i);
+    for (int i = 0; i < boardLength; i++) {
+      char currentChar = board.charAt(i);
       if (currentChar == '/') {
         column = 0;
         row++;
       } else if (Character.isDigit(currentChar)) {
-        column += Character.getNumericValue(currentChar);
-        column--;
+        int cols = Character.getNumericValue(currentChar);
+        for (int j = 0; j < cols; j++) {
+          this.board[row][column++] = null;
+        }
       } else
         setPieceFromChar(currentChar, row, column++);
     }
@@ -63,10 +88,9 @@ class Board {
   /**
    * The actual move generator.
    *
-   * @param player The player, whose turn it is to play('r' for Romans, 'g' for Gauls)
    * @return A list containing all the available moves
    */
-  String[] generateMoves(char player) {
+  String[] generateMoves() {
     if (player == 'r') {
       return generateRomanMoves();
     } else if (player == 'g') {
@@ -114,7 +138,7 @@ class Board {
 
   private void checkGaulCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
     if (board[row + rowOff][col + colOff] == null || isRomanPiece(row + rowOff, col + colOff)) {
-      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), 1);
+      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), -1);
       moves.add(move);
     }
   }
@@ -149,40 +173,25 @@ class Board {
     return moves;
   }
 
-  private ArrayList<Move> generateRomanTowerMoves() {
-    return null;
-  }
-
   private void checkRomanCatapultMove(int row, int col, int rowOff, int colOff, ArrayList<Move> moves) {
     if (board[row + rowOff][col + colOff] == null || isGaulPiece(row + rowOff, col + colOff)) {
-      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), 1);
+      Move move = new Move(squareToString(row, col), squareToString(row + rowOff, col + colOff), -1);
       moves.add(move);
     }
   }
 
   private ArrayList<Move> generateGaulTowerMoves(int row, int col) {
-    ArrayList<Tuple<Integer>> moveIndexTuples = new ArrayList<>(Arrays.asList(
-        new Tuple<>(-1, -1),
-        new Tuple<>(-1, 0),
-        new Tuple<>(-1, 1),
-        new Tuple<>(0, 1),
-        new Tuple<>(1, 1),
-        new Tuple<>(1, 0),
-        new Tuple<>(1, -1),
-        new Tuple<>(0, -1)
-    ));
     ArrayList<Move> moves = new ArrayList<>();
 
-    generateGaulTowerSilentMoves(moves, moveIndexTuples, row, col);
-    generateGaulTowerWallAttackMoves(moves, moveIndexTuples,row, col);
-    generateGaulTowerCatapultAttackMoves(moves, moveIndexTuples,row, col);
+    generateGaulTowerSilentMoves(moves, row, col);
+    generateGaulTowerWallAttackMoves(moves,row, col);
+    generateGaulTowerCatapultAttackMoves(moves,row, col);
 
     return moves;
 
   }
 
-  private void generateGaulTowerSilentMoves(ArrayList<Move> moves,
-      ArrayList<Tuple<Integer>> moveIndexTuples, int row, int col) {
+  private void generateGaulTowerSilentMoves(ArrayList<Move> moves, int row, int col) {
 
     for (Tuple<Integer> indexTuple: moveIndexTuples) {
       int i = indexTuple.getFirst();
@@ -192,13 +201,12 @@ class Board {
       if (isWithinBounds(newRow, newCol)
           && (board[newRow][newCol] == null || board[newRow][newCol] == Piece.GaulWall
               || board[newRow][newCol] == Piece.GaulTower)) {
-        checkSecondSquare(moves, row, col, row + 2*i, col + 2*j);
+        checkSecondGaulSquare(moves, row, col, row + 2*i, col + 2*j);
       }
     }
   }
 
-  private void generateGaulTowerWallAttackMoves(ArrayList<Move> moves,
-      ArrayList<Tuple<Integer>> moveIndexTuples, int row, int col) {
+  private void generateGaulTowerWallAttackMoves(ArrayList<Move> moves, int row, int col) {
     for (Tuple<Integer> indexTuple: moveIndexTuples) {
       int i = indexTuple.getFirst();
       int j = indexTuple.getSecond();
@@ -209,14 +217,13 @@ class Board {
         moves.add(new Move(
             squareToString(row, col),
             squareToString(newRow, newCol),
-            1
+            -1
         ));
       }
     }
   }
 
-  private void generateGaulTowerCatapultAttackMoves(ArrayList<Move> moves,
-      ArrayList<Tuple<Integer>> moveIndexTuples, int row, int col) {
+  private void generateGaulTowerCatapultAttackMoves(ArrayList<Move> moves, int row, int col) {
     for (Tuple<Integer> indexTuple: moveIndexTuples) {
       int i = indexTuple.getFirst();
       int j = indexTuple.getSecond();
@@ -238,7 +245,7 @@ class Board {
     }
   }
 
-  private void checkSecondSquare(ArrayList<Move> moves, int srcRow, int srcCol,
+  private void checkSecondGaulSquare(ArrayList<Move> moves, int srcRow, int srcCol,
       int destRow, int destCol) {
     if (isWithinBounds(destRow, destCol)
         && (board[destRow][destCol] == null || board[destRow][destCol] == Piece.GaulWall
@@ -246,7 +253,7 @@ class Board {
       moves.add(new Move(
           squareToString(srcRow, srcCol),
           squareToString(destRow, destCol),
-          1
+          -1
       ));
     }
   }
@@ -254,9 +261,77 @@ class Board {
   private ArrayList<Move> generateRomanTowerMoves(int row, int col) {
     ArrayList<Move> moves = new ArrayList<>();
 
-
+    generateRomanTowerSilentMoves(moves, row, col);
+    generateRomanTowerWallAttackMoves(moves, row, col);
+    generateRomanTowerCatapultAttackMoves(moves, row, col);
 
     return moves;
+  }
+
+  private void generateRomanTowerCatapultAttackMoves(ArrayList<Move> moves, int row, int col) {
+    for (Tuple<Integer> indexTuple: moveIndexTuples) {
+      int i = indexTuple.getFirst();
+      int j = indexTuple.getSecond();
+      int newRow = row + i;
+      int newCol = col + j;
+      if (isWithinBounds(newRow, newCol)
+          && (board[newRow][newCol] == Piece.GaulCatapult)) {
+        moves.add(new Move(
+            squareToString(row, col),
+            squareToString(newRow, newCol),
+            1
+        ));
+        moves.add(new Move(
+            squareToString(row, col),
+            squareToString(newRow, newCol),
+            2
+        ));
+      }
+    }
+  }
+
+  private void generateRomanTowerWallAttackMoves(ArrayList<Move> moves, int row, int col) {
+    for (Tuple<Integer> indexTuple: moveIndexTuples) {
+      int i = indexTuple.getFirst();
+      int j = indexTuple.getSecond();
+      int newRow = row + i;
+      int newCol = col + j;
+      if (isWithinBounds(newRow, newCol)
+          && (board[newRow][newCol] == Piece.GaulWall)) {
+        moves.add(new Move(
+            squareToString(row, col),
+            squareToString(newRow, newCol),
+            -1
+        ));
+      }
+    }
+  }
+
+  private void generateRomanTowerSilentMoves(ArrayList<Move> moves, int row, int col) {
+    for (Tuple<Integer> indexTuple: moveIndexTuples) {
+      int i = indexTuple.getFirst();
+      int j = indexTuple.getSecond();
+      int newRow = row + i;
+      int newCol = col + j;
+      if (isWithinBounds(newRow, newCol)
+          && (board[newRow][newCol] == null || board[newRow][newCol] == Piece.RomanWall
+          || board[newRow][newCol] == Piece.RomanTower)) {
+        checkSecondRomanSquare(moves, row, col, row + 2*i, col + 2*j);
+      }
+    }
+  }
+
+  private void checkSecondRomanSquare(ArrayList<Move> moves, int srcRow, int srcCol, int destRow,
+      int destCol) {
+    if (isWithinBounds(destRow, destCol)
+        && (board[destRow][destCol] == null || board[destRow][destCol] == Piece.RomanWall
+        || board[destRow][destCol] == Piece.RomanTower)) {
+      moves.add(new Move(
+          squareToString(srcRow, srcCol),
+          squareToString(destRow, destCol),
+          -1
+      ));
+    }
   }
 
   private ArrayList<Move> generateRomanCatapultMoves(int row, int col) {
@@ -266,23 +341,23 @@ class Board {
       checkRomanCatapultMove(row, col, 0, -3, moves);
 
       if (row < 5) { // throw left-forward
-        checkRomanCatapultMove(row, col, 2, -2, moves);
-        checkRomanCatapultMove(row, col, 3, -3, moves);
+        checkRomanCatapultMove(row, col, -2, -2, moves);
+        checkRomanCatapultMove(row, col, -3, -3, moves);
       }
     }
 
     if (row < 4) { // throw forward
-      checkRomanCatapultMove(row, col, 2, 0, moves);
-      checkRomanCatapultMove(row, col, 3, 0, moves);
+      checkRomanCatapultMove(row, col, -2, 0, moves);
+      checkRomanCatapultMove(row, col, -3, 0, moves);
     }
 
     if (col < 5) { // throw right
-      checkGaulCatapultMove(row, col, 0, 2, moves);
-      checkGaulCatapultMove(row, col, 0, 3, moves);
+      checkRomanCatapultMove(row, col, 0, 2, moves);
+      checkRomanCatapultMove(row, col, 0, 3, moves);
 
       if (row < 4) { // throw right-forward
-        checkGaulCatapultMove(row, col, 2, 2, moves);
-        checkGaulCatapultMove(row, col, 3, 3, moves);
+        checkRomanCatapultMove(row, col, -2, 2, moves);
+        checkRomanCatapultMove(row, col, -3, 3, moves);
       }
 
 
@@ -311,6 +386,8 @@ class Board {
       fenBuilder.append('/');
     }
     fenBuilder.deleteCharAt(fenBuilder.length() - 1);
+    fenBuilder.append(' ');
+    fenBuilder.append(player);
     return fenBuilder.toString();
   }
 
