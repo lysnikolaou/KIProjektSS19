@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * The board class, represented as a bitboard.
  */
-class Board {
+public class Board {
 
   /**
    * Bitboard for the gaul walls.
@@ -102,9 +102,19 @@ class Board {
     long squareRank() { return shiftWidth % 7; }
     Square(int shiftWidth) { this.shiftWidth = shiftWidth; }
     long bitboardMask() { return 1L << shiftWidth; }
-    long distanceTo(Square other) {
-      return Math.max(Math.abs(squareFile() - other.squareFile()),
+    int distanceTo(Square other) {
+      return (int) Math.max(Math.abs(squareFile() - other.squareFile()),
           Math.abs(squareRank() - other.squareRank()));
+    }
+    Square getInterveningSquare(Square other) {
+      long newShiftWidth = (shiftWidth + other.shiftWidth) / 2;
+      return findSquareByShiftWidth(newShiftWidth);
+    }
+    static Square findSquareByShiftWidth(long shiftWidth) {
+      for (Square square: Square.values()) {
+        if (square.shiftWidth == shiftWidth) return square;
+      }
+      throw new IllegalArgumentException("There isn't a square with this shiftwidth");
     }
   }
 
@@ -138,7 +148,7 @@ class Board {
    * The Constructor of the Board class.
    * @param fen The fen string that the board needs to accord to
    */
-  Board(String fen) {
+  public Board(String fen) {
     setBoard(fen);
   }
 
@@ -146,7 +156,7 @@ class Board {
    * Sets all the bitboard to their values according to the fen string given.
    * @param fen The fen string that the board needs to accord to
    */
-  void setBoard(String fen) {
+  public void setBoard(String fen) {
     String[] boardAndPlayer = fen.split(" ");
     String board = boardAndPlayer[0];
     playerToMove = boardAndPlayer[1].charAt(0);
@@ -163,6 +173,13 @@ class Board {
         setPieceAtSquare(c, squaresFenOrder[squareCounter++]);
       }
     }
+  }
+
+  /**
+   * Getter for the player
+   */
+  public char getPlayerToMove() {
+    return playerToMove;
   }
 
   private void removePieceAt(Square square) {
@@ -244,23 +261,168 @@ class Board {
   }
 
   /**
+   * Execute a move.
+   * @param moveToBeExecuted The string representation of the move
+   */
+  public void executeMove(String moveToBeExecuted) {
+    Move move = null;
+    String[] parts = moveToBeExecuted.split("-");
+    if (parts.length == 2)
+      move = new Move(Square.valueOf(parts[0]), Square.valueOf(parts[1]), -1);
+    else if (parts.length == 3)
+      move = new Move(Square.valueOf(parts[0]), Square.valueOf(parts[1]), Integer.parseInt(parts[2]));
+    assert move != null;
+
+    Piece piece = getPieceAt(move.getSourceSquare());
+    if (piece == Piece.GaulTower || piece == Piece.RomanTower) executeTowerMove(move);
+    else if (piece == Piece.GaulCatapult || piece == Piece.RomanCatapult) executeCatapultMove(move);
+
+    playerToMove = (playerToMove == 'r') ? 'g' : 'r';
+  }
+
+  /**
+   * Helper method to execute a catapult move.
+   * @param move The move to be executed
+   */
+  private void executeCatapultMove(Move move) {
+    downgradeCatapult(move.getSourceSquare(), 1);
+    Piece attackedPiece = getPieceAt(move.getDestinationSquare());
+    if (attackedPiece == null) {
+      setPieceAtSquare((playerToMove == 'r') ? 'C' : 'c', move.getDestinationSquare());
+    } else if ((walls & move.getDestinationSquare().bitboardMask()) > 0) {
+      removePieceAt(move.getDestinationSquare());
+    } else if ((towers & move.getDestinationSquare().bitboardMask()) > 0) {
+      downgradeTower(move.getDestinationSquare(), 1);
+    } else if ((catapults & move.getDestinationSquare().bitboardMask()) > 0) {
+      downgradeCatapult(move.getDestinationSquare(), 1);
+    }
+  }
+
+  /**
+   * Helper method to execute a tower move.
+   * @param move The move to be executed
+   */
+  private void executeTowerMove(Move move) {
+    int distance = move.getSourceSquare().distanceTo(move.getDestinationSquare());
+    if (distance == 2) {
+      removePieceAt(move.getSourceSquare());
+      upgradePiece(move.getSourceSquare().getInterveningSquare(move.getDestinationSquare()));
+      upgradePiece(move.getDestinationSquare());
+    } else if (distance == 1) {
+      if ((walls & move.getDestinationSquare().bitboardMask()) > 0) {
+        downgradeTower(move.getSourceSquare(), 1);
+        removePieceAt(move.getDestinationSquare());
+      } else if ((catapults & move.getDestinationSquare().bitboardMask()) > 0) {
+        downgradeTower(move.getSourceSquare(), move.getNumberOfPiecesMoved());
+        downgradeCatapult(move.getDestinationSquare(), move.getNumberOfPiecesMoved());
+      }
+    }
+  }
+
+  /**
+   * Downgrade a tower to another piece.
+   * @param square The square of the tower
+   * @param amount 1 downgrades the tower to a wall, 2 removes the tower
+   */
+  private void downgradeTower(Square square, int amount) {
+    removePieceAt(square);
+    if (amount == 1) setPieceAtSquare((playerToMove == 'r') ? 'W' : 'w', square);
+  }
+
+  /**
+   * Downgrade a catapult to another piece.
+   * @param square The square of the catapult
+   * @param amount 1 downgrades the catapult to a tower, 2 downgrades it to a wall
+   */
+  private void downgradeCatapult(Square square, int amount) {
+    removePieceAt(square);
+    if (amount == 1) {
+      setPieceAtSquare((playerToMove == 'r') ? 'T' : 't', square);
+    } else if (amount == 2) {
+      setPieceAtSquare((playerToMove == 'r') ? 'W' : 'w', square);
+    }
+  }
+
+  /**
+   * Upgrade a piece to the next strongest one.
+   * @param square The square of the piece
+   */
+  private void upgradePiece(Square square) {
+    Piece piece = getPieceAt(square);
+    if (piece == null) {
+      setPieceAtSquare((playerToMove == 'r') ? 'W' : 'w', square);
+      return;
+    }
+    removePieceAt(square);
+    switch (piece) {
+      case GaulWall:
+        setPieceAtSquare('t', square);
+        break;
+      case RomanWall:
+        setPieceAtSquare('T', square);
+        break;
+      case GaulTower:
+        setPieceAtSquare('c', square);
+        break;
+      case RomanTower:
+        setPieceAtSquare('C', square);
+        break;
+    }
+  }
+
+  /**
+   * Rating function of the board.
+   * @return The rating of the board, negative if gauls win, positive otherwise
+   */
+  public int getRating() {
+    int rating = 0;
+    for (Square square: squaresFenOrder) {
+      Piece piece = getPieceAt(square);
+      if (piece == null) continue;
+      switch(piece) {
+        case RomanCatapult:
+          rating += 500;
+        case RomanTower:
+          rating += 300;
+        case RomanWall:
+          rating += 120;
+        case GaulCatapult:
+          rating -= 500;
+        case GaulTower:
+          rating -= 300;
+        case GaulWall:
+          rating -= 120;
+
+      }
+    }
+
+    if ((romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
+    if ((romans & Rank.SIXTH.bitboardMask()) > 0) rating += 400;
+    if ((romans & Rank.FIFTH.bitboardMask()) > 0) rating += 200;
+    if ((gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
+    if ((gauls & Rank.SECOND.bitboardMask()) > 0) rating -= 400;
+    if ((gauls & Rank.THIRD.bitboardMask()) > 0) rating -= 200;
+    return rating;
+  }
+
+  /**
    * The move generator.
    * @return A string array that contatins all the moves, decoded according to the rules defined
    */
-  String[] generateMoves() {
+  public String[] generateMoves() {
     List<Move> moves = new ArrayList<>();
     long piecesToMove = (playerToMove == 'r') ? romans : gauls;
-
-    // Tower Moves
-    List<Square> towerToMoveSquares = getSquaresWithPieces(piecesToMove & towers);
-    for (Square square: towerToMoveSquares) {
-      generateTowerMovesFromSquare(square, moves);
-    }
 
     // Catapult Moves
     List<Square> catapultToMoveSquares = getSquaresWithPieces(piecesToMove & catapults);
     for (Square square: catapultToMoveSquares) {
       generateCatapultMovesFromSquare(square, moves);
+    }
+
+    // Tower Moves
+    List<Square> towerToMoveSquares = getSquaresWithPieces(piecesToMove & towers);
+    for (Square square: towerToMoveSquares) {
+      generateTowerMovesFromSquare(square, moves);
     }
 
     String[] rv = new String[moves.size()];
@@ -276,7 +438,7 @@ class Board {
    */
   private void generateCatapultMovesFromSquare(Square srcSquare, List<Move> moves) {
     for (int adjacentCellIndex: getCatapultAdjacentCellsIndexes(srcSquare)) {
-      Square destSquare = findSquareByShiftWidth(srcSquare.shiftWidth + adjacentCellIndex);
+      Square destSquare = Square.findSquareByShiftWidth(srcSquare.shiftWidth + adjacentCellIndex);
       Piece pieceAtAdjacentCell = getPieceAt(destSquare);
       if (pieceAtAdjacentCell == null
           || (playerToMove == 'r' && (gauls & destSquare.bitboardMask()) > 0)
@@ -300,21 +462,22 @@ class Board {
       cellsDistanceTwo.addAll(Arrays.asList(-16, -2, 12));
     }
 
+    List<Integer> intermediateList = new ArrayList<>();
     for (int cell: cellsDistanceTwo) {
       try {
-        if (srcSquare.distanceTo(findSquareByShiftWidth(srcSquare.shiftWidth + cell)) > 2)
-          cellsDistanceTwo.remove(cell);
+        if (srcSquare.distanceTo(Square.findSquareByShiftWidth(srcSquare.shiftWidth + cell)) <= 2)
+          intermediateList.add(cell);
       } catch (IllegalArgumentException e) {
         continue;
       }
     }
 
     List<Integer> finalList = new ArrayList<>();
-    for (int cell: cellsDistanceTwo) {
+    for (int cell: intermediateList) {
       finalList.add(cell);
       try {
-        Square cellDistanceTwo = findSquareByShiftWidth(srcSquare.shiftWidth + cell);
-        Square newCell = findSquareByShiftWidth(cellDistanceTwo.shiftWidth + cell/2);
+        Square cellDistanceTwo = Square.findSquareByShiftWidth(srcSquare.shiftWidth + cell);
+        Square newCell = Square.findSquareByShiftWidth(cellDistanceTwo.shiftWidth + cell/2);
         if (cellDistanceTwo.distanceTo(newCell) == 1) {
           finalList.add(cell + cell/2);
         }
@@ -333,19 +496,19 @@ class Board {
    */
   private void generateTowerMovesFromSquare(Square srcSquare, List<Move> moves) {
     for (int adjacentCellIndex: getTowerAdjacentCellsIndexes(srcSquare)) {
-      Square destSquare = findSquareByShiftWidth(srcSquare.shiftWidth + adjacentCellIndex);
+      Square destSquare = Square.findSquareByShiftWidth(srcSquare.shiftWidth + adjacentCellIndex);
       Piece pieceAtAdjacentCell = getPieceAt(destSquare);
-      if (pieceAtAdjacentCell == null
-          || (playerToMove == 'r' && (pieceAtAdjacentCell == Piece.RomanWall || pieceAtAdjacentCell == Piece.RomanTower))
-          || (playerToMove == 'g' && (pieceAtAdjacentCell == Piece.GaulWall || pieceAtAdjacentCell == Piece.GaulTower))) {
-        checkAndGenerateTowerSilentMove(srcSquare, adjacentCellIndex, moves);
-      } else if (playerToMove == 'r' && pieceAtAdjacentCell == Piece.GaulWall
-          || playerToMove == 'g' && pieceAtAdjacentCell == Piece.RomanWall) {
-        moves.add(new Move(srcSquare, destSquare, -1));
-      } else if (playerToMove == 'r' && pieceAtAdjacentCell == Piece.GaulCatapult
+      if (playerToMove == 'r' && pieceAtAdjacentCell == Piece.GaulCatapult
           || playerToMove == 'g' && pieceAtAdjacentCell == Piece.RomanCatapult) {
         moves.add(new Move(srcSquare, destSquare, 1));
         moves.add(new Move(srcSquare, destSquare, 2));
+      } else if (playerToMove == 'r' && pieceAtAdjacentCell == Piece.GaulWall
+          || playerToMove == 'g' && pieceAtAdjacentCell == Piece.RomanWall) {
+        moves.add(new Move(srcSquare, destSquare, -1));
+      } else if (pieceAtAdjacentCell == null
+          || (playerToMove == 'r' && (pieceAtAdjacentCell == Piece.RomanWall || pieceAtAdjacentCell == Piece.RomanTower))
+          || (playerToMove == 'g' && (pieceAtAdjacentCell == Piece.GaulWall || pieceAtAdjacentCell == Piece.GaulTower))) {
+        checkAndGenerateTowerSilentMove(srcSquare, adjacentCellIndex, moves);
       }
     }
 
@@ -383,7 +546,7 @@ class Board {
   private void checkAndGenerateTowerSilentMove(Square srcSquare, int adjacentCellIndex,
       List<Move> moves) {
     try {
-      Square destSquare = findSquareByShiftWidth(srcSquare.shiftWidth + 2 * adjacentCellIndex);
+      Square destSquare = Square.findSquareByShiftWidth(srcSquare.shiftWidth + 2 * adjacentCellIndex);
       if (srcSquare.distanceTo(destSquare) > 2) return;
       Piece piece = getPieceAt(destSquare);
       if (piece == null
@@ -403,22 +566,12 @@ class Board {
 
     long i = 0;
     while (pieces > 0) {
-      if ((pieces & 1) == 1) squares.add(findSquareByShiftWidth(i));
+      if ((pieces & 1) == 1) squares.add(Square.findSquareByShiftWidth(i));
       pieces >>= 1;
       i++;
     }
 
     return squares;
-  }
-
-  /**
-   * Given the shiftwidth of a Piece, find the appropriate Piece enum attribute
-   */
-  private Square findSquareByShiftWidth(long shiftwidth) {
-    for (Square square: Square.values()) {
-      if (square.shiftWidth == shiftwidth) return square;
-    }
-    throw new IllegalArgumentException("There isn't a square with this shiftwidth");
   }
 
   /**

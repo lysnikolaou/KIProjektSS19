@@ -85,4 +85,14 @@ class BoardTest {
     }
   }
 
+  @Test
+  void testExecuteMove() {
+    board.executeMove("a1-a3");
+    assertEquals("tttttttt/8/8/8/W7/W7/1TTTTTTT g", board.toString());
+    board.executeMove("a7-a5");
+    assertEquals("1ttttttt/w7/w7/8/W7/W7/1TTTTTTT r", board.toString());
+    board.executeMove("c1-a3");
+    assertEquals("1ttttttt/w7/w7/8/T7/WW6/1T1TTTTT g", board.toString());
+  }
+
 }
