@@ -46,7 +46,7 @@ public class MiniMax {
       long after = System.currentTimeMillis();
 
       timeElapsed += (after - before);
-      if (timeElapsed + 2*(after - before) > allocatedTime) break;
+      if (timeElapsed + 4*(after - before) > allocatedTime) break;
       depth++;
     }
     return bestMove;

@@ -70,17 +70,17 @@ public class Board {
    * An enum to represent all the pieces.
    */
   enum Piece {
-    GaulWall(1, 'w'),
-    GaulTower(2, 't'),
-    GaulCatapult(3, 'c'),
-    RomanWall(1, 'W'),
-    RomanTower(2, 'T'),
-    RomanCatapult(3, 'C');
+    GaulWall(120, 'w'),
+    GaulTower(300, 't'),
+    GaulCatapult(500, 'c'),
+    RomanWall(120, 'W'),
+    RomanTower(300, 'T'),
+    RomanCatapult(500, 'C');
 
-    final int numberOfStones;
+    final int pieceValue;
     final char fenChar;
-    Piece(int numberOfStones, char fenChar) {
-      this.numberOfStones = numberOfStones;
+    Piece(int pieceValue, char fenChar) {
+      this.pieceValue = pieceValue;
       this.fenChar = fenChar;
     }
   }
@@ -378,31 +378,71 @@ public class Board {
     int rating = 0;
     for (Square square: squaresFenOrder) {
       Piece piece = getPieceAt(square);
-      if (piece == null) continue;
-      switch(piece) {
-        case RomanCatapult:
-          rating += 500;
-        case RomanTower:
-          rating += 300;
-        case RomanWall:
-          rating += 120;
-        case GaulCatapult:
-          rating -= 500;
-        case GaulTower:
-          rating -= 300;
-        case GaulWall:
-          rating -= 120;
-
-      }
+      if (piece == null)
+        continue;
+      rating += piece.pieceValue;
+      if (piece == Piece.RomanWall) rating += getWallNeighbourhoodRating(square);
+      if (piece == Piece.GaulWall) rating -= getWallNeighbourhoodRating(square);
+      if (piece == Piece.RomanTower) rating += getTowerNeighbouthoodRating(square);
+      if (piece == Piece.GaulTower) rating -= getTowerNeighbouthoodRating(square);
     }
 
+    for (Rank rank: Rank.values()) {
+      if ((romans & rank.bitboardMask()) > 0) rating += rank.index * 50;
+      if ((gauls & rank.bitboardMask()) >0) rating -= rank.index * 50;
+    }
     if ((romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
-    if ((romans & Rank.SIXTH.bitboardMask()) > 0) rating += 400;
-    if ((romans & Rank.FIFTH.bitboardMask()) > 0) rating += 200;
     if ((gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
-    if ((gauls & Rank.SECOND.bitboardMask()) > 0) rating -= 400;
-    if ((gauls & Rank.THIRD.bitboardMask()) > 0) rating -= 200;
+
+
+
     return rating;
+  }
+
+  private int getTowerNeighbouthoodRating(Square square) {
+    int extraRating = 0;
+    int[]cellOffsets = {1, 2};
+    for (int offset: cellOffsets) {
+      Piece front;
+      try {
+        int finalOffset = (playerToMove == 'r') ? offset : -offset;
+        Square fronSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
+        if (square.distanceTo(fronSquare) > offset) continue;
+        front = getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
+      } catch (IllegalArgumentException e) {
+        continue;
+      }
+      if ((playerToMove == 'r' && front == Piece.RomanWall
+          || playerToMove == 'g' && front == Piece.GaulWall)) {
+        extraRating -= 40;
+        break;
+      }
+
+    }
+    return extraRating;
+  }
+
+  private int getWallNeighbourhoodRating(Square square) {
+    int extraRating = 0;
+    int[]cellOffsets = {1, 2, 3};
+    for (int offset: cellOffsets) {
+      Piece behind;
+      try {
+        int finalOffset = (playerToMove == 'r') ? -offset : offset;
+        Square behindSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
+        if (square.distanceTo(behindSquare) > offset) continue;
+        behind = getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
+      } catch (IllegalArgumentException e) {
+        continue;
+      }
+      if (offset != 3 && (playerToMove == 'r' && behind == Piece.RomanWall
+          || playerToMove == 'g' && behind == Piece.GaulWall))
+        extraRating += 60 / offset;
+      if (offset != 1 && (playerToMove == 'r' && behind == Piece.RomanCatapult
+          || playerToMove == 'g' && behind == Piece.GaulCatapult))
+        extraRating += 60;
+    }
+    return extraRating;
   }
 
   /**
