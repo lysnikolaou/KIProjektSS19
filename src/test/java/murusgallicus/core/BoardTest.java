@@ -1,8 +1,6 @@
 package murusgallicus.core;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,38 +11,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import murusgallicus.core.Board.Piece;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BoardTest {
 
-  Board board;
+  private Board board;
+  private BufferedReader reader;
 
   @BeforeEach
   void initializeBoard() {
     String initialFen = "tttttttt/8/8/8/8/8/TTTTTTTT r";
     board = new Board(initialFen);
-  }
 
-  @Test
-  void testBoard() {
-    for (int i = 0; i < 8; i++) {
-      assertEquals(Piece.GaulTower, board.board[0][i],
-          "Gaul Pieces didn't get initialized correctly.");
-      assertEquals(Piece.RomanTower, board.board[6][i],
-          "Roman Pieces didn't get initialized correctly.");
-    }
-    assertEquals("tttttttt/8/8/8/8/8/TTTTTTTT r", board.toString(),
-        "Board to FEN conversion is not correct");
-
-  }
-
-  @Test
-  void testGenerateMoves() {
     String fileName = "testGenerateMoves.csv";
     File file;
-    BufferedReader reader = null;
     try {
       file = new File(
           Objects.requireNonNull(getClass().getClassLoader().getResource(fileName)).getFile());
@@ -53,12 +34,31 @@ class BoardTest {
       e.printStackTrace();
     }
     assert reader != null;
+  }
 
+  @Test
+  void testBoard() {
+    String line;
+    try{
+      while ((line = reader.readLine()) != null) {
+        if (line.charAt(0) == '#') continue;
+        String fen = line.split(";")[0];
+        board.setBoard(fen);
+        assertEquals(fen, board.toString(),
+            "Board to FEN conversion is not correct for FEN="+fen);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  @Test
+  void testGenerateMoves() {
     String line;
     try {
       while ((line = reader.readLine()) != null) {
-        if (line.charAt(0) == '#')
-          continue;
+        if (line.charAt(0) == '#') continue;
         String[] fenAndMoves = line.split(";");
         String fen = fenAndMoves[0];
 
