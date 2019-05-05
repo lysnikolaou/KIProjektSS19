@@ -18,7 +18,7 @@ public class MiniMaxTest {
   @BeforeEach
   void initBoard() {
     board = new Board("tttttttt/8/8/8/8/8/TTTTTTTT r");
-    String fileName = "testGenerateMoves.csv";
+    String fileName = "testGetOptimalMove.csv";
     File file;
     try {
       file = new File(
@@ -35,15 +35,11 @@ public class MiniMaxTest {
     try {
       String line;
       while ((line = reader.readLine()) != null) {
-        String completeFen = line.split(";")[0];
-        String[] fenAndPlayer = completeFen.split(" ");
-        String fen = fenAndPlayer[0];
-        String player = fenAndPlayer[1];
-        board.setBoard(completeFen);
-        System.out.println(completeFen);
+        board.setBoard(line);
+        System.out.println(line);
         long before = System.currentTimeMillis();
         System.out.println("Move: " + MiniMax.getOptimalMove(board,
-            (player.charAt(0) == 'r') ? 0 : 1, 0));
+            (board.getPlayerToMove() == 'r') ? 0 : 1, 0));
         long after = System.currentTimeMillis();
         System.out.println("Time elapsed: " + (after-before));
         System.out.println("Depth: " + MiniMax.depth);
