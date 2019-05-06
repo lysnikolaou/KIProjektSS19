@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class BoardTest {
 
@@ -83,6 +85,38 @@ class BoardTest {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  @Test
+  void testExecuteMove() {
+    board.executeMove("a1-a3");
+    assertEquals("tttttttt/8/8/8/W7/W7/1TTTTTTT g", board.toString());
+    board.executeMove("a7-a5");
+    assertEquals("1ttttttt/w7/w7/8/W7/W7/1TTTTTTT r", board.toString());
+    board.executeMove("c1-a3");
+    assertEquals("1ttttttt/w7/w7/8/T7/WW6/1T1TTTTT g", board.toString());
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {10000, 100000, 1000000})
+  void testGetRatingPerformance(int nrOfExecutions) {
+    board.setBoard("tttttttt/8/8/8/8/8/TTTTTTTT r");
+    long before = System.currentTimeMillis();
+    for (int i = 0; i < nrOfExecutions; i++) {
+      board.getRating();
+    }
+    long after = System.currentTimeMillis();
+    System.out.println("Time elapsed: " + (after-before));
+    System.out.println("Average time per iteration: " + (after-before)/(double)nrOfExecutions);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"tttttttt/8/8/8/8/8/TTTTTTTT r", "tttttttt/8/8/8/5W2/6W1/TTTTTTT1 g",
+      "ttttttt1/6w1/5w2/8/5W2/6W1/TTTTTTT1 r"})
+  void testGetRatingResult(String fen) {
+    board.setBoard(fen);
+    System.out.print("Rating for FEN=" + fen + ": ");
+    System.out.println(board.getRating());
   }
 
 }

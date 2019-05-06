@@ -1,0 +1,30 @@
+Erster Meilenstein:
+  - 4. Platz zusammen mit Gruppe 7
+  - 4 Siege, 6 Niederlegungen
+
+Mögliche Gründe:
+  - Bewertungsfunktion zu schlecht (!)
+
+      Rating for FEN=tttttttt/8/8/8/8/8/TTTTTTTT r: 4500
+      Rating for FEN=tttttttt/8/8/8/5W2/6W1/TTTTTTT1 g: 4590
+      Rating for FEN=ttttttt1/6w1/5w2/8/5W2/6W1/TTTTTTT1 r: 4080
+
+  - Bewertungsfunktion zu langsam
+
+      Time elapsed: 496
+      Average time per iteration: 0.0496
+      Time elapsed: 3102
+      Average time per iteration: 0.03102
+      Time elapsed: 29080
+      Average time per iteration: 0.02908
+
+  - Boardrepresentation zu langsam implementiert (Bitboards)
+
+Ziele für 2. Meilenstein:
+  - Bewertungsfunktion verbessern
+  - Bewertungsfunktion schneller machen
+  - Alpha-Beta Suche besser testen
+
+  - Transposition Table
+  - Null Move
+  - Opening Theorie (?)
