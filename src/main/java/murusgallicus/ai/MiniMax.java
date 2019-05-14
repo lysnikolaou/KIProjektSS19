@@ -13,9 +13,17 @@ public class MiniMax {
    */
   static int depth;
   /**
+   * The maximal depth for the current call of the minimax function.
+   */
+  static int maxDepth = -1;
+  /**
    * The best move is stored here, when the MiniMax algorithm runs.
    */
   private static String bestMove;
+  /**
+   *
+   */
+  static boolean cutOffs = true;
 
   /**
    * Gets the optimal move for the given position, according the MiniMax search.
@@ -36,6 +44,28 @@ public class MiniMax {
   private static String minimax(Board board, int player, int allocatedTime) {
     depth = 0;
     nodes = 0;
+    if (maxDepth == -1) {
+      minimaxWithTimeConstraint(board, player, allocatedTime);
+    } else {
+      minimaxWithDepthConstraint(board, player);
+    }
+
+    return bestMove;
+  }
+
+  private static void minimaxWithDepthConstraint(Board board, int player) {
+    long before = System.currentTimeMillis();
+    if (board.getPlayerToMove() == 'r')
+      max(maxDepth, board, Integer.MAX_VALUE, player);
+    else
+      min(maxDepth, board, Integer.MIN_VALUE, player);
+    long after = System.currentTimeMillis();
+    System.out.println("FEN: " + board.toString());
+    System.out.println("Nodes: " + nodes);
+    System.out.println("Time elapsed: " + (after - before));
+  }
+
+  private static void minimaxWithTimeConstraint(Board board, int player, int allocatedTime) {
     long timeElapsed = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -49,7 +79,6 @@ public class MiniMax {
       if (timeElapsed + 4*(after - before) > allocatedTime) break;
       depth++;
     }
-    return bestMove;
   }
 
   /**
@@ -59,7 +88,7 @@ public class MiniMax {
     if (depth == 0) return board.getRating();
 
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return board.getRating();
+    if (moves.length == 0) return board.getRating(); // is leaf node
 
     int alpha = Integer.MIN_VALUE;
     int bestScore = Integer.MIN_VALUE;
@@ -68,10 +97,13 @@ public class MiniMax {
       String boardNow = board.toString();
       board.executeMove(move);
       alpha = Math.max(alpha, min(depth-1, board, alpha, player));
-      if (alpha > bestScore && player == 0) bestMove = move;
+      if (alpha > bestScore && player == 0) {
+        bestMove = move;
+        bestScore = alpha;
+      }
       board.setBoard(boardNow);
 
-      if (alpha >= beta) break;
+      if (cutOffs && alpha >= beta) break;
     }
     return alpha;
   }
@@ -92,10 +124,13 @@ public class MiniMax {
       String boardNow = board.toString();
       board.executeMove(move);
       beta = Math.min(beta, max(depth - 1, board, beta, player));
-      if (beta < bestScore && player == 1) bestMove = move;
+      if (beta < bestScore && player == 1) {
+        bestMove = move;
+        bestScore = beta;
+      }
       board.setBoard(boardNow);
 
-      if (alpha >= beta) break;
+      if (cutOffs && alpha >= beta) break;
     }
     return beta;
   }

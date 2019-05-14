@@ -21,10 +21,13 @@ Mögliche Gründe:
   - Boardrepresentation zu langsam implementiert (Bitboards)
 
 Ziele für 2. Meilenstein:
+  - Minimax ohne Cutoffs online stellen
   - Bewertungsfunktion verbessern
   - Bewertungsfunktion schneller machen
-  - Alpha-Beta Suche besser testen
+  - Alpha-Beta Suche besser testen (DEBUGGEN)
 
-  - Transposition Table
-  - Null Move
-  - Opening Theorie (?)
+  - PV Search
+  - Transposition Table (damit direkt anfangen)
+  - Dynamisches Zeitmanagement (Kurve)
+  - Minimal Window
+  - Null Move (?)

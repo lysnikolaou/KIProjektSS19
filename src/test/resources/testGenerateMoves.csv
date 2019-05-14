@@ -15,4 +15,13 @@ tttttttt/8/8/2T5/8/8/1TTTTTTT r;h1-h3,h1-f3,h1-f1,g1-g3,g1-e3,g1-e1,f1-h3,f1-h1,
 tttttttt/8/8/8/8/8/TTTTTTTT r;a1-a3,a1-c3,a1-c1,b1-b3,b1-d3,b1-d1,c1-a1,c1-a3,c1-c3,c1-e3,c1-e1,d1-b1,d1-b3,d1-d3,d1-f3,d1-f1,e1-c1,e1-c3,e1-e3,e1-g3,e1-g1,f1-d1,f1-d3,f1-f3,f1-h3,f1-h1,g1-e1,g1-e3,g1-g3,h1-f1,h1-f3,h1-h3
 8/1t6/1Ww1w3/1TWw4/8/1T1w4/8 r;b2-b4,b4-c5,b4-b2
 8/1t6/1Ww1w3/1TWw4/8/1T1w4/8 g;b6-b5,b6-d6,b6-d4
+8/1w6/2w1w3/1TWw4/8/1T1w4/8 r;b4-b2,b4-c5,b2-b4
+8/8/1Wt1w3/1TWt4/8/1T1w4/8 r;b4-b2,b4-b6,b2-b4
+8/8/1W2w3/2Wc4/1W2w3/1C1w4/8 r;b2-b4,b2-d4,b2-e5,b2-e2,b2-d2
+8/8/1W2w3/2W5/1W2t3/1T1w1w2/8 r;b2-b4,b2-d4
+8/8/1W2w3/2WW4/1WW1t3/3w1w2/8 g;e3-c1,e3-e1,e3-g1,e3-g3,e3-g5,e3-e5,e3-d4
 8/1c6/1C6/8/8/8/8 r;b5-b7,b5-d7,b5-d5,b5-e5
+ttt5/4twc1/5tw1/2W1W3/WW2T3/1WWW1WW1/2WW1W1W r;e3-e1,e3-c1,e3-g1,e3-c3,e3-g3,e3-e5,e3-c5
+3tww2/w1w1tww1/wTww1wWw/wT4T1/W1T2W2/2WWW3/5WW1 r;b5-b3,b5-b7,b5-d3,b5-a4,b5-a5,b5-a6,b5-c6,b5-c5,b4-b6,b4-b2,b4-d2,b4-d4,b4-a4,b4-a5,b4-c5,g4-g2,g4-e2,g4-e4,g4-f5,g4-h5,c3-a1,c3-a3,c3-c1,c3-e1,c3-e3,c3-e5
+ttt5/4twc1/2W3w1/2WWW1w1/WW5w/1WWW1WW1/2WW1W1W g;a7-a5,a7-c7,b7-d7,b7-d5,b7-b5,c7-a7,c7-e7,c7-a5,c7-e5,e6-c6,e6-g4,g6-d6,g6-e4,g6-d3,g6-g3
+2ww4/1w1tw2w/2wwc2w/4WW2/2TCW1tW/WW1WT1wW/4W3 r;c3-a5,c3-a3,c3-a1,c3-c1,c3-e1,e2-c2,e2-e4,e2-g4,d3-b3,d3-a3,d3-f3,d3-g3,d3-b5,d3-a6,d3-d5,d3-d6,d3-f5,d3-g6

@@ -380,7 +380,13 @@ public class Board {
       Piece piece = getPieceAt(square);
       if (piece == null)
         continue;
-      rating += piece.pieceValue;
+
+      if ((romans & square.bitboardMask()) > 0) {
+        rating += piece.pieceValue;
+      } else if ((gauls & square.bitboardMask()) > 0) {
+        rating -= piece.pieceValue;
+      }
+
       if (piece == Piece.RomanWall) rating += getWallNeighbourhoodRating(square);
       if (piece == Piece.GaulWall) rating -= getWallNeighbourhoodRating(square);
       if (piece == Piece.RomanTower) rating += getTowerNeighbouthoodRating(square);
@@ -389,12 +395,10 @@ public class Board {
 
     for (Rank rank: Rank.values()) {
       if ((romans & rank.bitboardMask()) > 0) rating += rank.index * 50;
-      if ((gauls & rank.bitboardMask()) >0) rating -= rank.index * 50;
+      if ((gauls & rank.bitboardMask()) > 0) rating -= (6 - rank.index) * 50;
     }
     if ((romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
     if ((gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
-
-
 
     return rating;
   }
