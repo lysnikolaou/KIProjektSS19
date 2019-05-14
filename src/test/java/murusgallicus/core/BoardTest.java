@@ -3,14 +3,11 @@ package murusgallicus.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import murusgallicus.testutils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,16 +23,7 @@ class BoardTest {
     String initialFen = "tttttttt/8/8/8/8/8/TTTTTTTT r";
     board = new Board(initialFen);
 
-    String fileName = "testGenerateMoves.csv";
-    File file;
-    try {
-      file = new File(
-          Objects.requireNonNull(getClass().getClassLoader().getResource(fileName)).getFile());
-      reader = new BufferedReader(new FileReader(file));
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-    assert reader != null;
+    reader = TestUtils.loadTestData("testGenerateMoves.csv");
   }
 
   @Test
@@ -89,12 +77,19 @@ class BoardTest {
 
   @Test
   void testExecuteMove() {
-    board.executeMove("a1-a3");
-    assertEquals("tttttttt/8/8/8/W7/W7/1TTTTTTT g", board.toString());
-    board.executeMove("a7-a5");
-    assertEquals("1ttttttt/w7/w7/8/W7/W7/1TTTTTTT r", board.toString());
-    board.executeMove("c1-a3");
-    assertEquals("1ttttttt/w7/w7/8/T7/WW6/1T1TTTTT g", board.toString());
+    reader = TestUtils.loadTestData("testExecuteMove.csv");
+    String line;
+    try {
+      while ((line = reader.readLine()) != null) {
+        String[] cols = line.split(";");
+        board.setBoard(cols[0]);
+        System.out.println(cols[1]);
+        board.executeMove(cols[1]);
+        assertEquals(cols[2], board.toString(), "Execute move not correct for FEN=" + cols[0]);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   @ParameterizedTest
