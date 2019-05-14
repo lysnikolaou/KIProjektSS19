@@ -29,7 +29,7 @@ class MiniMaxTest {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3, 4, 5})
+  @ValueSource(ints = {1, 2, 3})
   void testMinimaxWithoutCutoffs(int depth) {
 
     MiniMax.maxDepth = depth;

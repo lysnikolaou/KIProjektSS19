@@ -142,7 +142,7 @@ public class Board {
   /**
    * A list containig all the squares of the board in the order that they appears in the FEN string.
    */
-  private Square[] squaresFenOrder = Square.values();
+  Square[] squaresFenOrder = Square.values();
 
   /**
    * The Constructor of the Board class.
@@ -375,78 +375,7 @@ public class Board {
    * @return The rating of the board, negative if gauls win, positive otherwise
    */
   public int getRating() {
-    int rating = 0;
-    for (Square square: squaresFenOrder) {
-      Piece piece = getPieceAt(square);
-      if (piece == null)
-        continue;
-
-      if ((romans & square.bitboardMask()) > 0) {
-        rating += piece.pieceValue;
-      } else if ((gauls & square.bitboardMask()) > 0) {
-        rating -= piece.pieceValue;
-      }
-
-      if (piece == Piece.RomanWall) rating += getWallNeighbourhoodRating(square);
-      if (piece == Piece.GaulWall) rating -= getWallNeighbourhoodRating(square);
-      if (piece == Piece.RomanTower) rating += getTowerNeighbouthoodRating(square);
-      if (piece == Piece.GaulTower) rating -= getTowerNeighbouthoodRating(square);
-    }
-
-    for (Rank rank: Rank.values()) {
-      if ((romans & rank.bitboardMask()) > 0) rating += rank.index * 50;
-      if ((gauls & rank.bitboardMask()) > 0) rating -= (6 - rank.index) * 50;
-    }
-    if ((romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
-    if ((gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
-
-    return rating;
-  }
-
-  private int getTowerNeighbouthoodRating(Square square) {
-    int extraRating = 0;
-    int[]cellOffsets = {1, 2};
-    for (int offset: cellOffsets) {
-      Piece front;
-      try {
-        int finalOffset = (playerToMove == 'r') ? offset : -offset;
-        Square fronSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
-        if (square.distanceTo(fronSquare) > offset) continue;
-        front = getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
-      } catch (IllegalArgumentException e) {
-        continue;
-      }
-      if ((playerToMove == 'r' && front == Piece.RomanWall
-          || playerToMove == 'g' && front == Piece.GaulWall)) {
-        extraRating -= 40;
-        break;
-      }
-
-    }
-    return extraRating;
-  }
-
-  private int getWallNeighbourhoodRating(Square square) {
-    int extraRating = 0;
-    int[]cellOffsets = {1, 2, 3};
-    for (int offset: cellOffsets) {
-      Piece behind;
-      try {
-        int finalOffset = (playerToMove == 'r') ? -offset : offset;
-        Square behindSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
-        if (square.distanceTo(behindSquare) > offset) continue;
-        behind = getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
-      } catch (IllegalArgumentException e) {
-        continue;
-      }
-      if (offset != 3 && (playerToMove == 'r' && behind == Piece.RomanWall
-          || playerToMove == 'g' && behind == Piece.GaulWall))
-        extraRating += 60 / offset;
-      if (offset != 1 && (playerToMove == 'r' && behind == Piece.RomanCatapult
-          || playerToMove == 'g' && behind == Piece.GaulCatapult))
-        extraRating += 60;
-    }
-    return extraRating;
+    return BoardRating.getRating(this);
   }
 
   /**
@@ -664,7 +593,7 @@ public class Board {
    * @param square The square, whose piece type has to be found
    * @return The piece type of the square's piece
    */
-  private Piece getPieceAt(Square square) {
+  Piece getPieceAt(Square square) {
 
     if ((occupied & square.bitboardMask()) == 0) {
       return null;
