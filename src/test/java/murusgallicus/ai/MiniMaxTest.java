@@ -3,13 +3,7 @@ package murusgallicus.ai;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import murusgallicus.core.Board;
 import murusgallicus.testutils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;

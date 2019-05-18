@@ -2,33 +2,43 @@ package murusgallicus.ai;
 
 import murusgallicus.core.Board;
 
+/**
+ * The class the implement the search for the best move, using variants of the Minimax algorithm
+ * with alpha-beta cutoffs.
+ */
 public class MiniMax {
 
   /**
    * The number of nodes that are searched during the MiniMax algorithm.
    */
   static int nodes;
+
   /**
    * The depth of the generated search tree.
    */
   static int depth;
+
   /**
    * The maximal depth for the current call of the minimax function.
    */
   static int maxDepth = -1;
+
   /**
    * The best move is stored here, when the MiniMax algorithm runs.
    */
   private static String bestMove;
+
   /**
-   *
+   * A boolean that indicates if we allow cutoffs or not.
    */
   static boolean cutOffs = true;
 
   /**
    * Gets the optimal move for the given position, according the MiniMax search.
    * @param board The current state of the board
+   * @param player The player whose turn it is to play
    * @param numberOfMovesPlayed The number of moves that have been played in the game so far
+   * @param timeLeft The time left for the player in milliseconds
    * @return The string representation of the optimal move
    */
   public static String getOptimalMove(Board board, int player, int numberOfMovesPlayed, long timeLeft) {
@@ -37,8 +47,9 @@ public class MiniMax {
   }
 
   /**
-   * Run the minimax search in order to find the optimal move
+   * Run the minimax search in order to find the optimal move.
    * @param board The current state of the board
+   * @param player The player whose turn it is to move
    * @param allocatedTime The number of ms, when the method should be ready
    * @return The string representation of the optimal move
    */
@@ -54,6 +65,12 @@ public class MiniMax {
     return bestMove;
   }
 
+  /**
+   * Run the minimax algorithm until a certain depth is reached. This method mostly serves testing
+   * and performance evaluating purposes.
+   * @param board The current board
+   * @param player The player whose turn it is to play
+   */
   private static void minimaxWithDepthConstraint(Board board, int player) {
     long before = System.currentTimeMillis();
     if (board.getPlayerToMove() == 'r')
@@ -66,6 +83,13 @@ public class MiniMax {
     System.out.println("Time elapsed: " + (after - before));
   }
 
+  /**
+   * Run the minimax algorithm for a predefined period of time, no matter what depth is reached in
+   * that interval. This is needed for real tournament play.
+   * @param board The current board
+   * @param player The player whose turn it is to move
+   * @param allocatedTime The allocated time for the move
+   */
   private static void minimaxWithTimeConstraint(Board board, int player, int allocatedTime) {
     long timeElapsed = 0;
     while (true) {

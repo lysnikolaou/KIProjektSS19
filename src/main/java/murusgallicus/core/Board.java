@@ -147,6 +147,10 @@ public class Board {
    */
   Square[] squaresFenOrder = Square.values();
 
+  /**
+   * 6*56+1 random numbers that are needed for the Zobrist key calculation.
+   * One for each piece on each square + one for the player to move.
+   */
   private int[] zobristKeyRandomNumbers;
 
   /**
@@ -194,6 +198,10 @@ public class Board {
     return playerToMove;
   }
 
+  /**
+   * Update the bitboard to remove a piece at a certain square.
+   * @param square The square, whose piece gets removed
+   */
   private void removePieceAt(Square square) {
     Piece piece = getPieceAt(square);
     if (piece == null) return;
@@ -631,6 +639,11 @@ public class Board {
 
   }
 
+  /**
+   * Override the hashCode method to compute the Zobrist key of the board, that needs to be used
+   * when adding the Board to the Transposition Table.
+   * @return The zobrist key of the board
+   */
   @Override
   public int hashCode() {
     int NR_OF_SQUARES = squaresFenOrder.length;
@@ -645,6 +658,11 @@ public class Board {
     return hashValue ^ zobristKeyRandomNumbers[zobristKeyRandomNumbers.length - 1];
   }
 
+  /**
+   * Override the equals method to check equality of all the bitboards.
+   * @param other The other board to check equality to
+   * @return true, if equal Boards, false otherwise
+   */
   @Override
   public boolean equals(Object other) {
     if (other instanceof Board) {
