@@ -3,6 +3,7 @@ package murusgallicus.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * The board class, represented as a bitboard.
@@ -70,18 +71,20 @@ public class Board {
    * An enum to represent all the pieces.
    */
   enum Piece {
-    GaulWall(120, 'w'),
-    GaulTower(300, 't'),
-    GaulCatapult(500, 'c'),
-    RomanWall(120, 'W'),
-    RomanTower(300, 'T'),
-    RomanCatapult(500, 'C');
+    GaulWall(120, 'w', 3),
+    GaulTower(300, 't', 4),
+    GaulCatapult(500, 'c', 5),
+    RomanWall(120, 'W', 0),
+    RomanTower(300, 'T', 1),
+    RomanCatapult(500, 'C', 2);
 
     final int pieceValue;
     final char fenChar;
-    Piece(int pieceValue, char fenChar) {
+    final int zobristIndex;
+    Piece(int pieceValue, char fenChar, int zobristIndex) {
       this.pieceValue = pieceValue;
       this.fenChar = fenChar;
+      this.zobristIndex = zobristIndex;
     }
   }
 
@@ -144,12 +147,21 @@ public class Board {
    */
   Square[] squaresFenOrder = Square.values();
 
+  private int[] zobristKeyRandomNumbers;
+
   /**
    * The Constructor of the Board class.
    * @param fen The fen string that the board needs to accord to
    */
   public Board(String fen) {
     setBoard(fen);
+
+    Random random = new Random();
+    int nrOfRandoms = Piece.values().length * Square.values().length + 1;
+    zobristKeyRandomNumbers = new int[nrOfRandoms];
+    for (int i = 0; i < nrOfRandoms; i++) {
+      zobristKeyRandomNumbers[i] = random.nextInt();
+    }
   }
 
   /**
@@ -374,8 +386,8 @@ public class Board {
    * Rating function of the board.
    * @return The rating of the board, negative if gauls win, positive otherwise
    */
-  public int getRating() {
-    return BoardRating.getRating(this);
+  public int getRating(String[] moves) {
+    return BoardRating.getRating(this, moves);
   }
 
   /**
@@ -398,10 +410,7 @@ public class Board {
       generateTowerMovesFromSquare(square, moves);
     }
 
-    String[] rv = new String[moves.size()];
-    int i = 0;
-    for (Move m: moves) rv[i++] = m.toString();
-    return rv;
+    return moveListToStringArray(moves);
   }
 
   /**
@@ -588,6 +597,13 @@ public class Board {
     occupied |= square.bitboardMask();
   }
 
+  private String[] moveListToStringArray(List<Move> list) {
+    String[] rv = new String[list.size()];
+    int i = 0;
+    for (Move m: list) rv[i++] = m.toString();
+    return rv;
+  }
+
   /**
    * Get the piece type of a square.
    * @param square The square, whose piece type has to be found
@@ -613,5 +629,33 @@ public class Board {
 
     throw new IllegalArgumentException("Square is invalid");
 
+  }
+
+  @Override
+  public int hashCode() {
+    int NR_OF_SQUARES = squaresFenOrder.length;
+    int hashValue = 0;
+
+    for (Square square: squaresFenOrder) {
+      Piece piece = getPieceAt(square);
+      if (piece != null)
+        hashValue ^= zobristKeyRandomNumbers[piece.zobristIndex * NR_OF_SQUARES + (int) square.shiftWidth];
+    }
+
+    return hashValue ^ zobristKeyRandomNumbers[zobristKeyRandomNumbers.length - 1];
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof Board) {
+      return (gaulWalls == ((Board) other).gaulWalls
+          && gaulTowers == ((Board) other).gaulTowers
+          && gaulCatapults == ((Board) other).gaulCatapults
+          && romanWalls == ((Board) other).romanWalls
+          && romanTowers == ((Board) other).romanTowers
+          && romanCatapults == ((Board) other).romanCatapults
+          && playerToMove == ((Board) other).playerToMove);
+    }
+    return false;
   }
 }

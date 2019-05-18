@@ -31,8 +31,9 @@ public class MiniMax {
    * @param numberOfMovesPlayed The number of moves that have been played in the game so far
    * @return The string representation of the optimal move
    */
-  public static String getOptimalMove(Board board, int player, int numberOfMovesPlayed) {
-    return minimax(board, player, (numberOfMovesPlayed < 20) ? 1000 : 2000);
+  public static String getOptimalMove(Board board, int player, int numberOfMovesPlayed, long timeLeft) {
+    int timeAllowedForMove = TimeManagement.calculateAllowedTime(numberOfMovesPlayed, timeLeft);
+    return minimax(board, player, timeAllowedForMove);
   }
 
   /**
@@ -85,10 +86,9 @@ public class MiniMax {
    * The method for the max player
    */
   private static int max(int depth, Board board, int beta, int player) {
-    if (depth == 0) return board.getRating();
-
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return board.getRating(); // is leaf node
+
+    if (depth == 0 || moves.length == 0) return board.getRating(moves);
 
     int alpha = Integer.MIN_VALUE;
     int bestScore = Integer.MIN_VALUE;
@@ -112,10 +112,9 @@ public class MiniMax {
    * The method for the min player
    */
   private static int min(int depth, Board board, int alpha, int player) {
-    if (depth == 0) return board.getRating();
-
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return board.getRating();
+
+    if (depth == 0 || moves.length == 0) return board.getRating(moves);
 
     int beta = Integer.MAX_VALUE;
     int bestScore = Integer.MAX_VALUE;

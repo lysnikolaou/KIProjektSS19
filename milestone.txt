@@ -27,7 +27,7 @@ Ziele für 2. Meilenstein:
   - Alpha-Beta Suche besser testen (DEBUGGEN)
 
   - PV Search
-  - Transposition Table (damit direkt anfangen)
+  - Transposition Table (damit direkt anfangen) (fertig?)
   - Dynamisches Zeitmanagement (Kurve)
   - Minimal Window
   - Null Move (?)
