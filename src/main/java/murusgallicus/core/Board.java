@@ -148,10 +148,11 @@ public class Board {
   Square[] squaresFenOrder = Square.values();
 
   /**
-   * 6*56+1 random numbers that are needed for the Zobrist key calculation.
-   * One for each piece on each square + one for the player to move.
+   * A list containing 6*56+1 random numbers for Zobrist hashing.
+   * 6*56 for each piece(6) on each square(56=7*8)
+   * 1 for the side to move
    */
-  private int[] zobristKeyRandomNumbers;
+  int[] zobristKeys = new int[6*56+1];
 
   /**
    * The Constructor of the Board class.
@@ -159,13 +160,7 @@ public class Board {
    */
   public Board(String fen) {
     setBoard(fen);
-
-    Random random = new Random();
-    int nrOfRandoms = Piece.values().length * Square.values().length + 1;
-    zobristKeyRandomNumbers = new int[nrOfRandoms];
-    for (int i = 0; i < nrOfRandoms; i++) {
-      zobristKeyRandomNumbers[i] = random.nextInt();
-    }
+    fillZobristKeys();
   }
 
   /**
@@ -188,6 +183,16 @@ public class Board {
         removePieceAt(squaresFenOrder[squareCounter]);
         setPieceAtSquare(c, squaresFenOrder[squareCounter++]);
       }
+    }
+  }
+
+  /**
+   * Fill zobrist keys array with random number for zobrist hashing.
+   */
+  private void fillZobristKeys() {
+    Random random = new Random();
+    for (int i = 0; i < zobristKeys.length; i++) {
+      zobristKeys[i] = random.nextInt();
     }
   }
 
@@ -278,6 +283,22 @@ public class Board {
     builder.append(' ');
     builder.append(playerToMove);
     return builder.toString();
+  }
+
+  /**
+   * Hash code to be used in the transposition table
+   */
+  @Override
+  public int hashCode() {
+    int hashCode = 0;
+    for (Square square: squaresFenOrder) {
+      Piece piece = getPieceAt(square);
+      if (piece != null)
+        hashCode ^= zobristKeys[piece.zobristIndex * 56 + (int) square.shiftWidth];
+    }
+
+    if (playerToMove == 'g') hashCode ^= zobristKeys[336];
+    return hashCode;
   }
 
   /**
@@ -394,8 +415,8 @@ public class Board {
    * Rating function of the board.
    * @return The rating of the board, negative if gauls win, positive otherwise
    */
-  public int getRating(String[] moves) {
-    return BoardRating.getRating(this, moves);
+  public int getRating() {
+    return BoardRating.getRating(this);
   }
 
   /**
@@ -637,25 +658,6 @@ public class Board {
 
     throw new IllegalArgumentException("Square is invalid");
 
-  }
-
-  /**
-   * Override the hashCode method to compute the Zobrist key of the board, that needs to be used
-   * when adding the Board to the Transposition Table.
-   * @return The zobrist key of the board
-   */
-  @Override
-  public int hashCode() {
-    int NR_OF_SQUARES = squaresFenOrder.length;
-    int hashValue = 0;
-
-    for (Square square: squaresFenOrder) {
-      Piece piece = getPieceAt(square);
-      if (piece != null)
-        hashValue ^= zobristKeyRandomNumbers[piece.zobristIndex * NR_OF_SQUARES + (int) square.shiftWidth];
-    }
-
-    return hashValue ^ zobristKeyRandomNumbers[zobristKeyRandomNumbers.length - 1];
   }
 
   /**

@@ -99,7 +99,7 @@ class BoardTest {
     String[] moves = board.generateMoves();
     long before = System.currentTimeMillis();
     for (int i = 0; i < nrOfExecutions; i++) {
-      board.getRating(moves);
+      board.getRating();
     }
     long after = System.currentTimeMillis();
     System.out.println("Time elapsed: " + (after-before));
@@ -112,7 +112,7 @@ class BoardTest {
   void testGetRatingResult(String fen) {
     board.setBoard(fen);
     System.out.print("Rating for FEN=" + fen + ": ");
-    System.out.println(board.getRating(board.generateMoves()));
+    System.out.println(board.getRating());
   }
 
 }

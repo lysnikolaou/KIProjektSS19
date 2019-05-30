@@ -109,16 +109,11 @@ class BoardRating {
   /**
    * The rating function, which given a board returns which side is winning.
    * @param board The board to evaluate
-   * @param moves The generated moves for this board(needed in order to detect stalemate).
    * @return An integer, which is larger, when the romans are winning, and smaller, when the
    *         gauls are winning.
    */
-  static int getRating(Board board, String[] moves) {
+  static int getRating(Board board) {
     if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
-
-    if (moves.length == 0) {
-      return (board.getPlayerToMove() == 'r') ? MATE : -MATE;
-    }
 
     int rating = 0;
     for (Square square: board.squaresFenOrder) {

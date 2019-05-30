@@ -43,6 +43,6 @@ public class Player05 implements Player {
    */
   @Override
   public String requestMove(String representation, int player, long timeLeft, long additionalTime) {
-    return MiniMax.getOptimalMove(new Board(representation), player, numberOfMovesPlayed++, timeLeft);
+    return MiniMax.getOptimalMove(new Board(representation), player, timeLeft, numberOfMovesPlayed++);
   }
 }
