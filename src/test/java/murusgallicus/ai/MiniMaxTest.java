@@ -3,13 +3,7 @@ package murusgallicus.ai;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import murusgallicus.core.Board;
 import murusgallicus.testutils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +35,7 @@ class MiniMaxTest {
         String[] fenAndNumber = line.split(";");
         String[] numberOfNodes = fenAndNumber[1].split(",");
         board.setBoard(fenAndNumber[0]);
-        MiniMax.getOptimalMove(board, (board.getPlayerToMove() == 'r') ? 0 : 1, 0);
+        MiniMax.getOptimalMove(board, (board.getPlayerToMove() == 'r') ? 0 : 1, 0, 0L);
         if (depth <= numberOfNodes.length)
           assertEquals(Integer.parseInt(numberOfNodes[depth - 1]), MiniMax.nodes,
             "The number of generated nodes is not correct.");
@@ -63,7 +57,7 @@ class MiniMaxTest {
         System.out.println(line);
         long before = System.currentTimeMillis();
         System.out.println("Move: " + MiniMax.getOptimalMove(board,
-            (board.getPlayerToMove() == 'r') ? 0 : 1, 0));
+            (board.getPlayerToMove() == 'r') ? 0 : 1, 0, 0L));
         long after = System.currentTimeMillis();
         System.out.println("Time elapsed: " + (after-before));
         System.out.println("Depth: " + MiniMax.depth);

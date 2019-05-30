@@ -1,12 +1,125 @@
 package murusgallicus.core;
 
+import java.util.HashMap;
+import java.util.Map;
 import murusgallicus.core.Board.Piece;
-import murusgallicus.core.Board.Rank;
 import murusgallicus.core.Board.Square;
 
+/**
+ * A class where the rating calculation of the board happens.
+ */
 class BoardRating {
 
-  static int getRating(Board board) {
+  /**
+   * The Transposition Table for quicker computation of the rating function.
+   */
+  private static Map<Board, Integer> transpositionTable = new HashMap<>();
+
+  /**
+   * A number that defines Checkmate in the rating function.
+   */
+  private static int MATE = 100000;
+
+  /**
+   * The piece square table for the roman walls.
+   */
+  private static int[] romanWallPieceSquareTable = {
+      0, 20, 40, 60, 80, 100, MATE,
+      0, 20, 40, 60, 80, 100, MATE,
+      0, 20, 40, 60, 80, 100, MATE,
+      0, 30, 60, 90, 120, 150, MATE,
+      0, 30, 60, 90, 120, 150, MATE,
+      0, 20, 40, 60, 80, 100, MATE,
+      0, 20, 40, 60, 80, 100, MATE,
+      0, 20, 40, 60, 80, 100, MATE
+  };
+
+  /**
+   * The piece square table for the roman towers.
+   */
+  private static int[] romanTowerPieceSquareTable = {
+      0, 10, 20, 30, 100, 0, 0,
+      0, 20, 40, 60, 150, 0, 0,
+      0, 30, 60, 90, 200, 0, 0,
+      0, 30, 60, 90, 200, 0, 0,
+      0, 30, 60, 90, 200, 0, 0,
+      0, 30, 60, 90, 200, 0, 0,
+      0, 20, 40, 60, 150, 0, 0,
+      0, 10, 20, 30, 100, 0, 0
+  };
+
+  /**
+   * The piece square table for the roman catapults.
+   */
+  private static int[] romanCatapultPieceSquareTable = {
+      0, 15, 30, 100, 80, 0, 0,
+      0, 15, 30, 100, 80, 0, 0,
+      0, 25, 50, 120, 100, 0, 0,
+      0, 40, 80, 150, 120, 0, 0,
+      0, 40, 80, 150, 120, 0, 0,
+      0, 25, 50, 120, 100, 0, 0,
+      0, 15, 30, 100, 80, 0, 0,
+      0, 25, 50, 120, 100, 0, 0
+  };
+
+  /**
+   * The piece square table for the gaul walls.
+   */
+  private static int[] gaulWallPieceSquareTable = {
+      MATE, 100, 80, 60, 40, 20, 0,
+      MATE, 100, 80, 60, 40, 20, 0,
+      MATE, 100, 80, 60, 40, 20, 0,
+      MATE, 150, 120, 90, 60, 30, 0,
+      MATE, 150, 120, 90, 60, 30, 0,
+      MATE, 100, 80, 60, 40, 20, 0,
+      MATE, 100, 80, 60, 40, 20, 0,
+      MATE, 100, 80, 60, 40, 20, 0
+  };
+
+  /**
+   * The piece square table for the gaul towers.
+   */
+  private static int[] gaulTowerPieceSquareTable = {
+      0, 0, 100, 30, 20, 10, 0,
+      0, 0, 150, 60, 40, 20, 0,
+      0, 0, 2000, 90, 60, 30, 0,
+      0, 0, 2000, 90, 60, 30, 0,
+      0, 0, 2000, 90, 60, 30, 0,
+      0, 0, 2000, 90, 60, 30, 0,
+      0, 0, 150, 60, 40, 20, 0,
+      0, 0, 100, 30, 20, 10, 0
+
+  };
+
+  /**
+   * The piece square table for the gaul catapults.
+   */
+  private static int[] gaulCatapultPieceSquareTable = {
+      0, 0, 80, 100, 30, 15, 0,
+      0, 0, 80, 100, 30, 15, 0,
+      0, 0, 100, 120, 50, 25, 0,
+      0, 0, 120, 150, 80, 40, 0,
+      0, 0, 120, 150, 80, 40, 0,
+      0, 0, 100, 120, 50, 25, 0,
+      0, 0, 80, 100, 30, 15, 0,
+      0, 0, 80, 100, 30, 15, 0
+
+  };
+
+  /**
+   * The rating function, which given a board returns which side is winning.
+   * @param board The board to evaluate
+   * @param moves The generated moves for this board(needed in order to detect stalemate).
+   * @return An integer, which is larger, when the romans are winning, and smaller, when the
+   *         gauls are winning.
+   */
+  static int getRating(Board board, String[] moves) {
+    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
+
+    if (moves.length == 0) {
+      return (board.getPlayerToMove() == 'r') ? MATE : -MATE;
+    }
+
     int rating = 0;
     for (Square square: board.squaresFenOrder) {
       Piece piece = board.getPieceAt(square);
@@ -19,22 +132,43 @@ class BoardRating {
         rating -= piece.pieceValue;
       }
 
-      if (piece == Piece.RomanWall) rating += getWallNeighbourhoodRating(board, square);
-      if (piece == Piece.GaulWall) rating -= getWallNeighbourhoodRating(board, square);
-      if (piece == Piece.RomanTower) rating += getTowerNeighbouthoodRating(board, square);
-      if (piece == Piece.GaulTower) rating -= getTowerNeighbouthoodRating(board, square);
+      switch (piece) {
+        case RomanWall:
+          rating += getWallNeighbourhoodRating(board, square);
+          rating += romanWallPieceSquareTable[(int) square.shiftWidth];
+          break;
+        case RomanTower:
+          rating += getTowerNeighbouthoodRating(board, square);
+          rating += romanTowerPieceSquareTable[(int) square.shiftWidth];
+          break;
+        case RomanCatapult:
+          rating += romanCatapultPieceSquareTable[(int) square.shiftWidth];
+          break;
+        case GaulWall:
+          rating -= getWallNeighbourhoodRating(board, square);
+          rating -= gaulWallPieceSquareTable[(int) square.shiftWidth];
+          break;
+        case GaulTower:
+          rating -= getTowerNeighbouthoodRating(board, square);
+          rating -= gaulTowerPieceSquareTable[(int) square.shiftWidth];
+          break;
+        case GaulCatapult:
+          rating -= gaulCatapultPieceSquareTable[(int) square.shiftWidth];
+          break;
+      }
     }
 
-    for (Rank rank: Rank.values()) {
-      if ((board.romans & rank.bitboardMask()) > 0) rating += rank.index * 50;
-      if ((board.gauls & rank.bitboardMask()) > 0) rating -= (6 - rank.index) * 50;
-    }
-    if ((board.romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
-    if ((board.gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
-
+    transpositionTable.put(board, rating);
     return rating;
   }
 
+  /**
+   * For each tower, the tower neighbourhood gets evaluated, in order to find out what value the
+   * surrounding pieces add to the current tower.
+   * @param board The present board
+   * @param square The square, on which the tower sits
+   * @return The extra rating the tower gets, due to its surroundings
+   */
   private static int getTowerNeighbouthoodRating(Board board, Square square) {
     int extraRating = 0;
     int[]cellOffsets = {1, 2};
@@ -58,6 +192,13 @@ class BoardRating {
     return extraRating;
   }
 
+  /**
+   * For each wall, the wall neighbourhood gets evaluated, in order to find out what value the
+   * surrounding pieces add to the current wall.
+   * @param board The present board
+   * @param square The square, on which the wall sits
+   * @return The extra rating the wall gets, due to its surroundings
+   */
   private static int getWallNeighbourhoodRating(Board board, Square square) {
     int extraRating = 0;
     int[]cellOffsets = {1, 2, 3};

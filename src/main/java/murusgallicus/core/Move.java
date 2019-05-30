@@ -31,15 +31,27 @@ public class Move {
     this.numberOfPiecesMoved = numberOfPiecesMoved;
   }
 
-  public Square getSourceSquare() {
+  /**
+   * Getter for the source square.
+   * @return The source square
+   */
+  Square getSourceSquare() {
     return sourceSquare;
   }
 
-  public Square getDestinationSquare() {
+  /**
+   * Getter for the destination square.
+   * @return The destination square
+   */
+  Square getDestinationSquare() {
     return destinationSquare;
   }
 
-  public int getNumberOfPiecesMoved() {
+  /**
+   * Getter for the number of moved pieces.
+   * @return The number of moved pieces
+   */
+  int getNumberOfPiecesMoved() {
     return numberOfPiecesMoved;
   }
 

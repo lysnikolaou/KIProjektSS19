@@ -96,9 +96,10 @@ class BoardTest {
   @ValueSource(ints = {10000, 100000, 1000000})
   void testGetRatingPerformance(int nrOfExecutions) {
     board.setBoard("tttttttt/8/8/8/8/8/TTTTTTTT r");
+    String[] moves = board.generateMoves();
     long before = System.currentTimeMillis();
     for (int i = 0; i < nrOfExecutions; i++) {
-      board.getRating();
+      board.getRating(moves);
     }
     long after = System.currentTimeMillis();
     System.out.println("Time elapsed: " + (after-before));
@@ -111,7 +112,7 @@ class BoardTest {
   void testGetRatingResult(String fen) {
     board.setBoard(fen);
     System.out.print("Rating for FEN=" + fen + ": ");
-    System.out.println(board.getRating());
+    System.out.println(board.getRating(board.generateMoves()));
   }
 
 }
