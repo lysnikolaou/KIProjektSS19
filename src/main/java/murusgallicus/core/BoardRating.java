@@ -4,9 +4,16 @@ import murusgallicus.core.Board.Piece;
 import murusgallicus.core.Board.Rank;
 import murusgallicus.core.Board.Square;
 
+import java.util.HashMap;
+import java.util.Map;
+
 class BoardRating {
 
+  private static Map<Board, Integer> transpositionTable = new HashMap<>();
+
   static int getRating(Board board) {
+    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
+
     int rating = 0;
     for (Square square: board.squaresFenOrder) {
       Piece piece = board.getPieceAt(square);
@@ -32,6 +39,7 @@ class BoardRating {
     if ((board.romans & Rank.SEVENTH.bitboardMask()) >0) rating += 100000;
     if ((board.gauls & Rank.FIRST.bitboardMask()) >0) rating -= 100000;
 
+    transpositionTable.put(board, rating);
     return rating;
   }
 

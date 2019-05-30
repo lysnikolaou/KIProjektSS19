@@ -2,9 +2,6 @@ package murusgallicus.ai;
 
 import murusgallicus.core.Board;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class MiniMax {
 
   /**
@@ -27,10 +24,6 @@ public class MiniMax {
    * Flag to indicate if cutOffs are in order.
    */
   static boolean cutOffs = true;
-  /**
-   * Transposition Table.
-   */
-  private static Map<Board, Integer> transpositionTable = new HashMap<>();
 
   /**
    * Gets the optimal move for the given position, according the MiniMax search.
@@ -62,10 +55,7 @@ public class MiniMax {
 
   private static void minimaxWithDepthConstraint(Board board, int player) {
     long before = System.currentTimeMillis();
-    if (board.getPlayerToMove() == 'r')
-      max(maxDepth, board, Integer.MAX_VALUE, player);
-    else
-      min(maxDepth, board, Integer.MIN_VALUE, player);
+    pvSearch(Integer.MIN_VALUE, Integer.MAX_VALUE, depth, board, player);
     long after = System.currentTimeMillis();
     System.out.println("FEN: " + board.toString());
     System.out.println("Nodes: " + nodes);
@@ -73,13 +63,11 @@ public class MiniMax {
   }
 
   private static void minimaxWithTimeConstraint(Board board, int player, long allocatedTime) {
+    depth = 0;
     long timeElapsed = 0;
     while (true) {
       long before = System.currentTimeMillis();
-
-      if (board.getPlayerToMove() == 'r') max(depth, board, Integer.MAX_VALUE, player);
-      else min(depth, board, Integer.MIN_VALUE, player);
-
+      pvSearch(Integer.MIN_VALUE, Integer.MAX_VALUE, depth, board, player);
       long after = System.currentTimeMillis();
 
       timeElapsed += (after - before);
@@ -88,66 +76,77 @@ public class MiniMax {
     }
   }
 
-  /**
-   * The method for the max player
-   */
-  private static int max(int depth, Board board, int beta, int player) {
-    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
-    if (depth == 0) return putRatingToTranspositionTable(board);
+  private static int pvSearch(int alpha, int beta, int depth, Board board, int player) {
+    if (depth == 0) return board.getRating();
+    boolean searchPV = true;
 
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return putRatingToTranspositionTable(board);
+    sortPV(moves);
+    if (moves.length == 0) return board.getRating();
 
-    int alpha = Integer.MIN_VALUE;
-    int bestScore = Integer.MIN_VALUE;
-    for (String move: moves) {
-      nodes++;
-      String boardNow = board.toString();
+    for (String move : moves) {
+      String currentBoard = board.toString();
       board.executeMove(move);
-      alpha = Math.max(alpha, min(depth-1, board, alpha, player));
-      if (alpha > bestScore && player == 0) {
-        bestMove = move;
-        bestScore = alpha;
-      }
-      board.setBoard(boardNow);
 
-      if (cutOffs && alpha >= beta) break;
+      int score;
+      if (searchPV) {
+        score = -pvSearch(-beta, -alpha, depth - 1, board, player);
+      } else {
+        score = -zwSearch(-alpha, depth - 1, board);
+        if (score > alpha) score = -pvSearch(-beta, -alpha, depth - 1, board, player);
+      }
+
+      board.setBoard(currentBoard);
+
+      if (score >= beta) return beta;
+      if (score > alpha) {
+        alpha = score;
+        searchPV = false;
+        if (player == 0 && board.getPlayerToMove() == 'r' || player == 1 && board.getPlayerToMove() == 'g') {
+          bestMove = move;
+        }
+      }
     }
+
     return alpha;
   }
 
-  /**
-   * The method for the min player
-   */
-  private static int min(int depth, Board board, int alpha, int player) {
-    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
-    if (depth == 0) return putRatingToTranspositionTable(board);
+  private static void sortPV(String[] moves) {
+    if (bestMove == null) return;
 
-    String[] moves = board.generateMoves();
-    if (moves.length == 0) return putRatingToTranspositionTable(board);
-
-    int beta = Integer.MAX_VALUE;
-    int bestScore = Integer.MAX_VALUE;
-    for (String move: moves) {
-      nodes++;
-      String boardNow = board.toString();
-      board.executeMove(move);
-      beta = Math.min(beta, max(depth - 1, board, beta, player));
-      if (beta < bestScore && player == 1) {
-        bestMove = move;
-        bestScore = beta;
+    for (int i = 0; i < moves.length; i++) {
+      if (moves[i].equals(bestMove)) {
+        bringMoveForward(moves, i);
+        return;
       }
-      board.setBoard(boardNow);
-
-      if (cutOffs && alpha >= beta) break;
     }
-    return beta;
+
   }
 
-  private static int putRatingToTranspositionTable(Board board) {
-    int rating = board.getRating();
-    transpositionTable.put(board, rating);
-    return rating;
+  private static void bringMoveForward(String[] moves, int i) {
+    String tmp = moves[0];
+    moves[0] = moves[i];
+    moves[i] = tmp;
+  }
+
+  private static int zwSearch(int beta, int depth, Board board) {
+    if (depth == 0) return board.getRating();
+
+    String[] moves = board.generateMoves();
+    if (moves.length == 0) return board.getRating();
+
+    for (String move: moves) {
+      String currentBoard = board.toString();
+      board.executeMove(move);
+
+      int score = -zwSearch(1-beta, depth-1, board);
+
+      board.setBoard(currentBoard);
+
+      if (score >= beta) return beta;
+    }
+
+    return beta-1;
   }
 
 }

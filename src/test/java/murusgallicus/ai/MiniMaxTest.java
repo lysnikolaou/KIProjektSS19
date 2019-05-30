@@ -41,7 +41,7 @@ class MiniMaxTest {
         String[] fenAndNumber = line.split(";");
         String[] numberOfNodes = fenAndNumber[1].split(",");
         board.setBoard(fenAndNumber[0]);
-        MiniMax.getOptimalMove(board, (board.getPlayerToMove() == 'r') ? 0 : 1, 0);
+        MiniMax.getOptimalMove(board, (board.getPlayerToMove() == 'r') ? 0 : 1, 120000L, 0);
         if (depth <= numberOfNodes.length)
           assertEquals(Integer.parseInt(numberOfNodes[depth - 1]), MiniMax.nodes,
             "The number of generated nodes is not correct.");
@@ -63,7 +63,7 @@ class MiniMaxTest {
         System.out.println(line);
         long before = System.currentTimeMillis();
         System.out.println("Move: " + MiniMax.getOptimalMove(board,
-            (board.getPlayerToMove() == 'r') ? 0 : 1, 0));
+            (board.getPlayerToMove() == 'r') ? 0 : 1, 120000L, 0));
         long after = System.currentTimeMillis();
         System.out.println("Time elapsed: " + (after-before));
         System.out.println("Depth: " + MiniMax.depth);
