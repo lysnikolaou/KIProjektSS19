@@ -3,6 +3,7 @@ package murusgallicus.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * The board class, represented as a bitboard.
@@ -145,11 +146,19 @@ public class Board {
   Square[] squaresFenOrder = Square.values();
 
   /**
+   * A list containing 6*56+1 random numbers for Zobrist hashing.
+   * 6*56 for each piece(6) on each square(56=7*8)
+   * 1 for the side to move
+   */
+  int[] zobristKeys = new int[6*56+1];
+
+  /**
    * The Constructor of the Board class.
    * @param fen The fen string that the board needs to accord to
    */
   public Board(String fen) {
     setBoard(fen);
+    fillZobristKeys();
   }
 
   /**
@@ -172,6 +181,16 @@ public class Board {
         removePieceAt(squaresFenOrder[squareCounter]);
         setPieceAtSquare(c, squaresFenOrder[squareCounter++]);
       }
+    }
+  }
+
+  /**
+   * Fill zobrist keys array with random number for zobrist hashing.
+   */
+  private void fillZobristKeys() {
+    Random random = new Random();
+    for (int i = 0; i < zobristKeys.length; i++) {
+      zobristKeys[i] = random.nextInt();
     }
   }
 
@@ -258,6 +277,24 @@ public class Board {
     builder.append(' ');
     builder.append(playerToMove);
     return builder.toString();
+  }
+
+  /**
+   * Hash code to be used in the transposition table
+   */
+  @Override
+  public int hashCode() {
+    Piece[] pieces = Piece.values();
+    Square[] squares = Square.values();
+    int hashCode = 0;
+    for (int i = 0; i < 6; i++) {
+      for (int j = 0; j < 56; j++) {
+        if (getPieceAt(squares[j]) == pieces[i]) hashCode ^= zobristKeys[i*56+j];
+      }
+    }
+
+    if (playerToMove == 'g') hashCode ^= zobristKeys[336];
+    return hashCode;
   }
 
   /**

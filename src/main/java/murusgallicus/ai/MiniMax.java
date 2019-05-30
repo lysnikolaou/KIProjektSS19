@@ -2,6 +2,9 @@ package murusgallicus.ai;
 
 import murusgallicus.core.Board;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MiniMax {
 
   /**
@@ -21,9 +24,13 @@ public class MiniMax {
    */
   private static String bestMove;
   /**
-   *
+   * Flag to indicate if cutOffs are in order.
    */
   static boolean cutOffs = true;
+  /**
+   * Transposition Table.
+   */
+  private static Map<Board, Integer> transpositionTable = new HashMap<>();
 
   /**
    * Gets the optimal move for the given position, according the MiniMax search.
@@ -31,8 +38,8 @@ public class MiniMax {
    * @param numberOfMovesPlayed The number of moves that have been played in the game so far
    * @return The string representation of the optimal move
    */
-  public static String getOptimalMove(Board board, int player, int numberOfMovesPlayed) {
-    return minimax(board, player, (numberOfMovesPlayed < 20) ? 1000 : 2000);
+  public static String getOptimalMove(Board board, int player, long timeLeft, int numberOfMovesPlayed) {
+    return minimax(board, player, TimeManagement.computeTimeAllocatedForMove(timeLeft, numberOfMovesPlayed));
   }
 
   /**
@@ -41,7 +48,7 @@ public class MiniMax {
    * @param allocatedTime The number of ms, when the method should be ready
    * @return The string representation of the optimal move
    */
-  private static String minimax(Board board, int player, int allocatedTime) {
+  private static String minimax(Board board, int player, long allocatedTime) {
     depth = 0;
     nodes = 0;
     if (maxDepth == -1) {
@@ -65,7 +72,7 @@ public class MiniMax {
     System.out.println("Time elapsed: " + (after - before));
   }
 
-  private static void minimaxWithTimeConstraint(Board board, int player, int allocatedTime) {
+  private static void minimaxWithTimeConstraint(Board board, int player, long allocatedTime) {
     long timeElapsed = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -85,10 +92,11 @@ public class MiniMax {
    * The method for the max player
    */
   private static int max(int depth, Board board, int beta, int player) {
-    if (depth == 0) return board.getRating();
+    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
+    if (depth == 0) return putRatingToTranspositionTable(board);
 
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return board.getRating(); // is leaf node
+    if (moves.length == 0) return putRatingToTranspositionTable(board);
 
     int alpha = Integer.MIN_VALUE;
     int bestScore = Integer.MIN_VALUE;
@@ -112,10 +120,11 @@ public class MiniMax {
    * The method for the min player
    */
   private static int min(int depth, Board board, int alpha, int player) {
-    if (depth == 0) return board.getRating();
+    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
+    if (depth == 0) return putRatingToTranspositionTable(board);
 
     String[] moves = board.generateMoves();
-    if (moves.length == 0) return board.getRating();
+    if (moves.length == 0) return putRatingToTranspositionTable(board);
 
     int beta = Integer.MAX_VALUE;
     int bestScore = Integer.MAX_VALUE;
@@ -133,6 +142,12 @@ public class MiniMax {
       if (cutOffs && alpha >= beta) break;
     }
     return beta;
+  }
+
+  private static int putRatingToTranspositionTable(Board board) {
+    int rating = board.getRating();
+    transpositionTable.put(board, rating);
+    return rating;
   }
 
 }
