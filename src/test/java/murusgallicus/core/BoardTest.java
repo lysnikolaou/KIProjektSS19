@@ -96,6 +96,7 @@ class BoardTest {
   @ValueSource(ints = {10000, 100000, 1000000})
   void testGetRatingPerformance(int nrOfExecutions) {
     board.setBoard("tttttttt/8/8/8/8/8/TTTTTTTT r");
+    String[] moves = board.generateMoves();
     long before = System.currentTimeMillis();
     for (int i = 0; i < nrOfExecutions; i++) {
       board.getRating();

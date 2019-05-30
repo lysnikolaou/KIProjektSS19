@@ -19,10 +19,9 @@ class TimeManagement {
         }
 
         int outOfOpeningMoves = Math.max(0, numberOfMovesPlayed - firstEasyMoves);
-        int nMoves = Math.min(outOfOpeningMoves, 10);
+        int nMoves = Math.min(outOfOpeningMoves, midGameMoves);
         double factor = 2 - nMoves / 10;
         double target = timeLeft / 45;
         return (long) (factor * target);
     }
-
 }

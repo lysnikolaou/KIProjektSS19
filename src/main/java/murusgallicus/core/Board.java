@@ -71,18 +71,20 @@ public class Board {
    * An enum to represent all the pieces.
    */
   enum Piece {
-    GaulWall(120, 'w'),
-    GaulTower(300, 't'),
-    GaulCatapult(500, 'c'),
-    RomanWall(120, 'W'),
-    RomanTower(300, 'T'),
-    RomanCatapult(500, 'C');
+    GaulWall(120, 'w', 3),
+    GaulTower(300, 't', 4),
+    GaulCatapult(500, 'c', 5),
+    RomanWall(120, 'W', 0),
+    RomanTower(300, 'T', 1),
+    RomanCatapult(500, 'C', 2);
 
     final int pieceValue;
     final char fenChar;
-    Piece(int pieceValue, char fenChar) {
+    final int zobristIndex;
+    Piece(int pieceValue, char fenChar, int zobristIndex) {
       this.pieceValue = pieceValue;
       this.fenChar = fenChar;
+      this.zobristIndex = zobristIndex;
     }
   }
 
@@ -201,6 +203,10 @@ public class Board {
     return playerToMove;
   }
 
+  /**
+   * Update the bitboard to remove a piece at a certain square.
+   * @param square The square, whose piece gets removed
+   */
   private void removePieceAt(Square square) {
     Piece piece = getPieceAt(square);
     if (piece == null) return;
@@ -435,10 +441,7 @@ public class Board {
       generateTowerMovesFromSquare(square, moves);
     }
 
-    String[] rv = new String[moves.size()];
-    int i = 0;
-    for (Move m: moves) rv[i++] = m.toString();
-    return rv;
+    return moveListToStringArray(moves);
   }
 
   /**
@@ -625,6 +628,13 @@ public class Board {
     occupied |= square.bitboardMask();
   }
 
+  private String[] moveListToStringArray(List<Move> list) {
+    String[] rv = new String[list.size()];
+    int i = 0;
+    for (Move m: list) rv[i++] = m.toString();
+    return rv;
+  }
+
   /**
    * Get the piece type of a square.
    * @param square The square, whose piece type has to be found
@@ -650,5 +660,24 @@ public class Board {
 
     throw new IllegalArgumentException("Square is invalid");
 
+  }
+
+  /**
+   * Override the equals method to check equality of all the bitboards.
+   * @param other The other board to check equality to
+   * @return true, if equal Boards, false otherwise
+   */
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof Board) {
+      return (gaulWalls == ((Board) other).gaulWalls
+          && gaulTowers == ((Board) other).gaulTowers
+          && gaulCatapults == ((Board) other).gaulCatapults
+          && romanWalls == ((Board) other).romanWalls
+          && romanTowers == ((Board) other).romanTowers
+          && romanCatapults == ((Board) other).romanCatapults
+          && playerToMove == ((Board) other).playerToMove);
+    }
+    return false;
   }
 }

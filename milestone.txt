@@ -26,6 +26,6 @@ Ziele für 2. Meilenstein:
   - Bewertungsfunktion schneller machen
   - Alpha-Beta Suche besser testen (DEBUGGEN)
 
-  - PV Search
+  - PV Search (Ready?)
   - Transposition Table (Ready)
   - Dynamisches Zeitmanagement (Ready)
