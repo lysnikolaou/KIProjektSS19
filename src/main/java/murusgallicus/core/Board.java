@@ -290,13 +290,11 @@ public class Board {
    */
   @Override
   public int hashCode() {
-    Piece[] pieces = Piece.values();
-    Square[] squares = Square.values();
     int hashCode = 0;
-    for (int i = 0; i < 6; i++) {
-      for (int j = 0; j < 56; j++) {
-        if (getPieceAt(squares[j]) == pieces[i]) hashCode ^= zobristKeys[i*56+j];
-      }
+    for (Square square: squaresFenOrder) {
+      Piece piece = getPieceAt(square);
+      if (piece != null)
+        hashCode ^= zobristKeys[piece.zobristIndex * 56 + (int) square.shiftWidth];
     }
 
     if (playerToMove == 'g') hashCode ^= zobristKeys[336];
