@@ -137,22 +137,22 @@ class BoardRating {
 
       switch (piece) {
         case RomanWall:
-          rating += getWallNeighbourhoodRating(board, square);
+          rating += getWallNeighbourhoodRating(board, square, piece);
           rating += romanWallPieceSquareTable[(int) square.shiftWidth];
           break;
         case RomanTower:
-          rating += getTowerNeighbouthoodRating(board, square);
+          rating += getTowerNeighbouthoodRating(board, square, piece);
           rating += romanTowerPieceSquareTable[(int) square.shiftWidth];
           break;
         case RomanCatapult:
           rating += romanCatapultPieceSquareTable[(int) square.shiftWidth];
           break;
         case GaulWall:
-          rating -= getWallNeighbourhoodRating(board, square);
+          rating -= getWallNeighbourhoodRating(board, square, piece);
           rating -= gaulWallPieceSquareTable[(int) square.shiftWidth];
           break;
         case GaulTower:
-          rating -= getTowerNeighbouthoodRating(board, square);
+          rating -= getTowerNeighbouthoodRating(board, square, piece);
           rating -= gaulTowerPieceSquareTable[(int) square.shiftWidth];
           break;
         case GaulCatapult:
@@ -172,22 +172,22 @@ class BoardRating {
    * @param square The square, on which the tower sits
    * @return The extra rating the tower gets, due to its surroundings
    */
-  private static int getTowerNeighbouthoodRating(Board board, Square square) {
+  private static int getTowerNeighbouthoodRating(Board board, Square square, Piece piece) {
     int extraRating = 0;
     int[]cellOffsets = {1, 2};
     for (int offset: cellOffsets) {
       Piece front;
       try {
-        int finalOffset = (board.playerToMove == 'r') ? offset : -offset;
-        Square fronSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
-        if (square.distanceTo(fronSquare) > offset) continue;
-        front = board.getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
+        int finalOffset = (piece == Piece.RomanTower) ? offset : -offset;
+        Square frontSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
+        if (square.distanceTo(frontSquare) > offset) continue;
+        front = board.getPieceAt(frontSquare);
       } catch (IllegalArgumentException e) {
         continue;
       }
-      if ((board.playerToMove == 'r' && front == Piece.RomanWall
-          || board.playerToMove == 'g' && front == Piece.GaulWall)) {
-        extraRating -= 80;
+      if ((piece == Piece.RomanTower && front == Piece.RomanWall
+          || piece == Piece.GaulTower && front == Piece.GaulWall)) {
+        extraRating += 40 / offset;
         break;
       }
 
@@ -202,26 +202,45 @@ class BoardRating {
    * @param square The square, on which the wall sits
    * @return The extra rating the wall gets, due to its surroundings
    */
-  private static int getWallNeighbourhoodRating(Board board, Square square) {
-    int extraRating = 0;
-    int[]cellOffsets = {1, 2, 3};
+  private static int getWallNeighbourhoodRating(Board board, Square square, Piece piece) {
+    int extraRating = addExtraRatingFromAdjacentOccupiedCells(board, square, piece);
+    extraRating -= subtractExtraRatingFromAdjacentEmptyCells(board, square);
+    return extraRating;
+  }
+
+  private static int subtractExtraRatingFromAdjacentEmptyCells(Board board, Square square) {
+    int[] cellOffsets = {-8, -7, -6, -1, 1, 6, 7, 8};
     for (int offset: cellOffsets) {
-      Piece behind;
+      Piece adjacent;
       try {
-        int finalOffset = (board.playerToMove == 'r') ? -offset : offset;
-        Square behindSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
-        if (square.distanceTo(behindSquare) > offset) continue;
-        behind = board.getPieceAt(Square.findSquareByShiftWidth(square.shiftWidth - 1));
+        Square adjacentSquare = Square.findSquareByShiftWidth(square.shiftWidth + offset);
+        if (square.distanceTo(adjacentSquare) > 1) continue;
+        adjacent = board.getPieceAt(adjacentSquare);
+        if (adjacent != null) return 0;
       } catch (IllegalArgumentException e) {
         continue;
       }
-      if (offset != 3 && (board.playerToMove == 'r' && behind == Piece.RomanWall
-          || board.playerToMove == 'g' && behind == Piece.GaulWall))
-        extraRating += 60 / offset;
-      if (offset != 1 && (board.playerToMove == 'r' && behind == Piece.RomanCatapult
-          || board.playerToMove == 'g' && behind == Piece.GaulCatapult))
-        extraRating += 60;
     }
+
+    return 40;
+  }
+
+  private static int addExtraRatingFromAdjacentOccupiedCells(Board board, Square square, Piece piece) {
+    int extraRating = 0;
+    int offset = 3;
+    Piece behind;
+    try {
+      int finalOffset = (piece == Piece.RomanWall) ? -offset : offset;
+      Square behindSquare = Square.findSquareByShiftWidth(square.shiftWidth + finalOffset);
+      if (square.distanceTo(behindSquare) > offset) return 0;
+      behind = board.getPieceAt(behindSquare);
+    } catch (IllegalArgumentException e) {
+      return 0;
+    }
+
+    if (piece == Piece.RomanWall && behind == Piece.RomanCatapult
+        || piece == Piece.GaulWall && behind == Piece.GaulCatapult)
+      extraRating += 30;
     return extraRating;
   }
 }
