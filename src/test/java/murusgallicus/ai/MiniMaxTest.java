@@ -68,6 +68,5 @@ class MiniMaxTest {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
   }
 }
