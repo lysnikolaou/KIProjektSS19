@@ -107,8 +107,17 @@ class BoardTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"tttttttt/8/8/8/8/8/TTTTTTTT r", "tttttttt/8/8/8/5W2/6W1/TTTTTTT1 g",
-      "ttttttt1/6w1/5w2/8/5W2/6W1/TTTTTTT1 r"})
+  @ValueSource(strings = {
+          "tttttttt/8/8/8/8/8/TTTTTTTT r",
+          "tttttttt/8/8/8/5W2/6W1/TTTTTTT1 g",
+          "ttttttt1/6w1/5w2/8/5W2/6W1/TTTTTTT1 r",
+          "1ww3w1/2wwwww1/3www2/4w3/3WW2W/2WWWWW1/T5WW g",
+          "5ww1/2w1wwW1/w1w1wWT1/2wt3W/1wWwwW2/2Tw1WW1/T6T r",
+          "ttt1tttt/3w4/3w4/8/2W5/1W6/1TTTTTTT r",
+          "ttt2ttt/3ww3/3ww3/8/2T5/1W1W4/1TTT1TTT r",
+          "1tt3tc/w2ww3/w1Tww3/2Ww4/8/1WWW4/1T1T1TTT r"
+
+  })
   void testGetRatingResult(String fen) {
     board.setBoard(fen);
     System.out.print("Rating for FEN=" + fen + ": ");

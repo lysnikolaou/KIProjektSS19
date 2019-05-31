@@ -39,12 +39,12 @@ class BoardRating {
    */
   private static int[] romanTowerPieceSquareTable = {
       0, 10, 20, 30, 100, 0, 0,
-      0, 20, 40, 60, 150, 0, 0,
+      0, 30, 40, 60, 150, 0, 0,
       0, 30, 60, 90, 200, 0, 0,
+      0, 40, 80, 100, 200, 0, 0,
+      0, 40, 80, 100, 200, 0, 0,
       0, 30, 60, 90, 200, 0, 0,
-      0, 30, 60, 90, 200, 0, 0,
-      0, 30, 60, 90, 200, 0, 0,
-      0, 20, 40, 60, 150, 0, 0,
+      0, 30, 40, 60, 150, 0, 0,
       0, 10, 20, 30, 100, 0, 0
   };
 
@@ -82,10 +82,10 @@ class BoardRating {
   private static int[] gaulTowerPieceSquareTable = {
       0, 0, 100, 30, 20, 10, 0,
       0, 0, 150, 60, 40, 20, 0,
-      0, 0, 2000, 90, 60, 30, 0,
-      0, 0, 2000, 90, 60, 30, 0,
-      0, 0, 2000, 90, 60, 30, 0,
-      0, 0, 2000, 90, 60, 30, 0,
+      0, 0, 200, 90, 60, 30, 0,
+      0, 0, 200, 100, 80, 40, 0,
+      0, 0, 200, 100, 80, 40, 0,
+      0, 0, 200, 90, 60, 30, 0,
       0, 0, 150, 60, 40, 20, 0,
       0, 0, 100, 30, 20, 10, 0
 
@@ -113,7 +113,15 @@ class BoardRating {
    *         gauls are winning.
    */
   static int getRating(Board board) {
-    if (transpositionTable.containsKey(board)) return transpositionTable.get(board);
+    if (transpositionTable.containsKey(board)) {
+      int rating = transpositionTable.get(board);
+      return (board.getPlayerToMove() == 'r') ? rating : -rating;
+    }
+
+    if (board.romanTowers == 0)
+      return (board.getPlayerToMove() == 'r') ? -MATE : MATE;
+    else if (board.gaulTowers == 0)
+      return (board.getPlayerToMove() == 'r') ? MATE : -MATE;
 
     int rating = 0;
     for (Square square: board.squaresFenOrder) {
@@ -121,11 +129,11 @@ class BoardRating {
       if (piece == null)
         continue;
 
-      if ((board.romans & square.bitboardMask()) > 0) {
-        rating += piece.pieceValue;
-      } else if ((board.gauls & square.bitboardMask()) > 0) {
-        rating -= piece.pieceValue;
-      }
+//      if ((board.romans & square.bitboardMask()) > 0) {
+//        rating += piece.pieceValue;
+//      } else if ((board.gauls & square.bitboardMask()) > 0) {
+//        rating -= piece.pieceValue;
+//      }
 
       switch (piece) {
         case RomanWall:
@@ -154,7 +162,7 @@ class BoardRating {
     }
 
     transpositionTable.put(board, rating);
-    return rating;
+    return (board.getPlayerToMove() == 'r') ? rating : -rating;
   }
 
   /**
@@ -179,7 +187,7 @@ class BoardRating {
       }
       if ((board.playerToMove == 'r' && front == Piece.RomanWall
           || board.playerToMove == 'g' && front == Piece.GaulWall)) {
-        extraRating -= 40;
+        extraRating -= 80;
         break;
       }
 
