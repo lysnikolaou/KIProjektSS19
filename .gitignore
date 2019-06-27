@@ -101,3 +101,7 @@ data/
 
 # Python
 venv/
+*.py[co]
+
+# VS Code
+.vscode/
