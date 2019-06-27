@@ -17,11 +17,12 @@ IMPORTANT_POSITIONS_START = 11
 
 def generate_data(important_positions, winner):
     data = list()
-    data.append(['POSITION', 'LABEL'])
+    data.append(['POSITION', 'WHITE_WINS', 'BLACK_WINS'])
     for position in important_positions:
         fen = position[POSITION_RECORD_INDEX]
-        label = (1, 0) if winner == '0' else (0, 1)
-        data.append([fen, label])
+        white_wins = 1 if winner == '0' else 0
+        black_wins = 1 - white_wins
+        data.append([fen, white_wins, black_wins])
     return data
 
 
