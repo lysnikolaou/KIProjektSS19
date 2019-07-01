@@ -58,7 +58,10 @@ def train_dbn(X):
 
 def train_mlp(X, Y):
     dbn_network = UnsupervisedDBN.load(DBN_NETWORK_FILENAME)
-    X = dbn_network.transform(X)
+    first_positions = dbn_network.transform(X[:, 0])
+    second_positions = dbn_network.transform(X[:, 1])
+    X = np.concatenate((first_positions, second_positions), axis=1)
+    print(f'Shape after Concatenation = {X.shape}')
 
     mlp_network = MLPClassifier(
         hidden_layer_sizes=(90, 45, 20, 2),
@@ -73,7 +76,10 @@ def train_mlp(X, Y):
 def predict_mlp(X):
     dbn_network: UnsupervisedDBN = UnsupervisedDBN.load(DBN_NETWORK_FILENAME)
     mlp_network: MLPClassifier = joblib.load(MLP_NETWORK_FILENAME)
-    X = dbn_network.transform(X)
+    first_position = dbn_network.transform(X[0])
+    second_position = dbn_network.transform(X[1])
+    X = np.concatenate((first_position, second_position))
+    X = dbn_network.transform(X.reshape(1, -1))
     result = mlp_network.predict(X)
     return result
 
@@ -108,18 +114,38 @@ def gather_data():
     mlp_data, mlp_labels = extract_mlp_data(data)
 
     dbn_data = extract_dbn_data(raw_data[1:]) # [1:] so that header line gets removed
-    return dbn_data, mlp_data, mlp_labels
+    return np.array(dbn_data), np.array(mlp_data), np.array(mlp_labels)
+
+
+def test_mlp(X, Y):
+    dbn_network: UnsupervisedDBN = UnsupervisedDBN.load(DBN_NETWORK_FILENAME)
+    mlp_network: MLPClassifier = joblib.load(MLP_NETWORK_FILENAME)
+    first_positions = dbn_network.transform(X[:, 0])
+    second_positions = dbn_network.transform(X[:, 1])
+    X = np.concatenate((first_positions, second_positions), axis=1)
+    return mlp_network.score(X, Y)
 
 
 def main():
     dbn_data, mlp_data, mlp_labels = gather_data()
+    print("Splitting data in Training and Test Data...")
     X_train, X_test, Y_train, Y_test = train_test_split(
         mlp_data,
         mlp_labels,
         test_size=0.25
     )
-    train_dbn(dbn_data)
-    train_mlp(X_train, Y_train)
+    print("Splitting Done!")
+
+    # print("Training Deep Belief Network...")
+    # train_dbn(dbn_data)
+    # print("Training DBN Done!")
+
+    # print("Training Multi-Layer Perceptron...")
+    # train_mlp(X_train, Y_train)
+    # print("Training MLP Done!")
+
+    print("Testing MLP...")
+    print(f"Score = {test_mlp(X_test, Y_test)}")
 
 
 if __name__ == '__main__':
