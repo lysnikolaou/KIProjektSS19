@@ -203,6 +203,22 @@ public class Board {
     return playerToMove;
   }
 
+  public int[] bitify() {
+    int[] result = new int[337];
+    for (int i = 55; i <= 0; i--) {
+      result[i] = ((gaulWalls & (1 << i)) != 0) ? 1 : 0;
+      result[56+i] = ((gaulTowers & (1 << i)) != 0) ? 1 : 0;
+      result[2*56+i] = ((gaulCatapults & (1 << i)) != 0) ? 1 : 0;
+      result[3*56+i] = ((romanWalls & (1 << i)) != 0) ? 1 : 0;
+      result[4*56+i] = ((romanTowers & (1 << i)) != 0) ? 1 : 0;
+      result[5*56+i] = ((romanCatapults & (1 << i)) != 0) ? 1 : 0;
+    }
+
+
+    result[336] = (getPlayerToMove() == 'r') ? 0 : 1;
+    return result;
+  }
+
   /**
    * Update the bitboard to remove a piece at a certain square.
    * @param square The square, whose piece gets removed

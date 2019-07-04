@@ -1,14 +1,25 @@
 package murusgallicus.ai;
-
 import murusgallicus.core.Board;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
+
 
 /**
  * The class the implement the search for the best move, using variants of the Minimax algorithm
  * with alpha-beta cutoffs.
  */
 public class MiniMax {
+  private static class Pair<X, Y> {
+    public Pair(X first, Y second) {
+      this.first = first;
+      this.second = second;
+    }
+    public X first;
+    public Y second;
+  }
 
   /**
    * The number of nodes that are searched during the MiniMax algorithm.
@@ -24,11 +35,6 @@ public class MiniMax {
    * The maximal depth for the current call of the minimax function.
    */
   public static int maxDepth = -1;
-
-  /**
-   * The best move is stored here, when the MiniMax algorithm runs.
-   */
-  private static String[] bestMoveList = new String[40];
 
   /**
    * Flag to indicate if cutOffs are in order.
@@ -58,14 +64,10 @@ public class MiniMax {
     depth = 0;
     nodes = 0;
     if (maxDepth == -1) {
-      minimaxWithTimeConstraint(board, player, allocatedTime);
+      return minimaxWithTimeConstraint(board, player, allocatedTime);
     } else {
-      minimaxWithDepthConstraint(board, player);
+      return minimaxWithDepthConstraint(board, player);
     }
-
-    String bestMove = bestMoveList[0];
-    bestMoveList = new String[40];
-    return bestMove;
   }
 
   /**
@@ -74,15 +76,17 @@ public class MiniMax {
    * @param board The current board
    * @param player The player whose turn it is to play
    */
-  private static void minimaxWithDepthConstraint(Board board, int player) {
+  private static String minimaxWithDepthConstraint(Board board, int player) {
+    String bestMove = null;
     long before = System.currentTimeMillis();
     for (int depth = 0; depth <= maxDepth; depth++) {
-      pvSearch(Integer.MIN_VALUE, Integer.MAX_VALUE, depth, board, player);
+      bestMove = alphaBeta(board, board, board, depth, player).second;
     }
     long after = System.currentTimeMillis();
     System.out.println("FEN: " + board.toString());
     System.out.println("Nodes: " + nodes);
     System.out.println("Time elapsed: " + (after - before));
+    return bestMove;
   }
 
   /**
@@ -92,12 +96,13 @@ public class MiniMax {
    * @param player The player whose turn it is to move
    * @param allocatedTime The allocated time for the move
    */
-  private static void minimaxWithTimeConstraint(Board board, int player, long allocatedTime) {
+  private static String minimaxWithTimeConstraint(Board board, int player, long allocatedTime) {
+    String bestMove;
     long timeElapsed = 0;
     while (true) {
       maxDepth = depth;
       long before = System.currentTimeMillis();
-      pvSearch(Integer.MIN_VALUE, Integer.MAX_VALUE, depth, board, player);
+      bestMove = alphaBeta(board, board, board, depth, player).second;
       long after = System.currentTimeMillis();
 
       timeElapsed += (after - before);
@@ -105,70 +110,58 @@ public class MiniMax {
       depth++;
     }
     maxDepth = -1;
+    return bestMove;
   }
 
-  private static int pvSearch(int alpha, int beta, int depth, Board board, int player) {
-    if (depth == 0) return board.getRating();
-
-    String[] moves = board.generateMoves();
-    sortPV(moves);
-    if (moves.length == 0) return board.getRating();
-
-    nodes++;
-    String currentBoard = board.toString();
-    board.executeMove(moves[0]);
-    int bestScore = -pvSearch(-beta, -alpha, depth - 1, board, player);
-    board.setBoard(currentBoard);
-    if (bestScore > alpha) {
-      if (bestScore >= beta) {
-        return bestScore;
-      }
-      alpha = bestScore;
+  private static Pair<Integer, Integer> predict(int[] first, int[] second) {
+    String firstString = Arrays.toString(first);
+    String secondString = Arrays.toString(second);
+    String result = null;
+    try {
+      Process p = Runtime.getRuntime().exec("python3 ../../../../../scripts.model.py predict " +
+              firstString + " " + secondString);
+      BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+      result = input.readLine();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-    bestMoveList[maxDepth-depth] = moves[0];
 
-    for (int i = 1; i < moves.length; i++) {
-      nodes++;
-      currentBoard = board.toString();
-      board.executeMove(moves[i]);
+    if (result.startsWith("[1")) return new Pair<>(1, 0);
+    else return new Pair<>(0, 1);
+  }
 
-      int score = -pvSearch(-alpha-1, -alpha, depth - 1, board, player);
-      if (score > alpha && score < beta) {
-        score = -pvSearch(-beta, -alpha, depth - 1, board, player);
-        if (score > alpha) {
-          bestMoveList[maxDepth-depth] = moves[i];
-          alpha = score;
+  private static Pair<Pair<Integer, Integer>, String> alphaBeta(Board board, Board alphaPos, Board betaPos, int depth, int player) {
+    if (depth == 0) {
+      return (player == 0) ? new Pair<>(predict(board.bitify(), alphaPos.bitify()), null) :
+              new Pair<>(predict(board.bitify(), betaPos.bitify()), null);
+    }
+
+    if (player == 0) {
+      String bestMove = null;
+      String[] moves = board.generateMoves();
+      for (String move: moves) {
+        board.executeMove(move);
+        Pair<Pair<Integer, Integer>, String> rv = alphaBeta(board, alphaPos, betaPos, depth-1, 1);
+        if (rv.first.first == 1) {
+          bestMove = move;
+          alphaPos = board;
         }
+        if (predict(betaPos.bitify(), board.bitify()).second == 1) break;
       }
-
-      board.setBoard(currentBoard);
-
-      if (score > bestScore) {
-        if (score >= beta) {
-          return score;
+      return new Pair<>(null, bestMove);
+    } else {
+      String bestMove = null;
+      String[] moves = board.generateMoves();
+      for (String move: moves) {
+        board.executeMove(move);
+        Pair<Pair<Integer, Integer>, String> rv = alphaBeta(board, alphaPos, betaPos, depth-1, 0);
+        if (rv.first.first == 1) {
+          bestMove = move;
+          betaPos = board;
         }
-        bestScore = score;
+        if (predict(betaPos.bitify(), board.bitify()).first == 1) break;
       }
+      return new Pair<>(null, bestMove);
     }
-
-    return bestScore;
-  }
-
-  private static void sortPV(String[] moves) {
-    if (bestMoveList.length == 0) return;
-
-    for (int i = 0; i < moves.length; i++) {
-      if (Arrays.asList(bestMoveList).contains(moves[i])) {
-        bringMoveForward(moves, i);
-        return;
-      }
-    }
-
-  }
-
-  private static void bringMoveForward(String[] moves, int i) {
-    String tmp = moves[0];
-    moves[0] = moves[i];
-    moves[i] = tmp;
   }
 }

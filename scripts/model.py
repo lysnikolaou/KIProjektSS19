@@ -1,4 +1,5 @@
 from itertools import product
+from sys import argv, exit
 
 import numpy as np
 
@@ -73,15 +74,17 @@ def train_mlp(X, Y):
     joblib.dump(mlp_network, MLP_NETWORK_FILENAME)
 
 
-def predict_mlp(X):
+def predict_mlp(first, second):
+    First = np.array(first)
+    Second = np.array(second)
     dbn_network: UnsupervisedDBN = UnsupervisedDBN.load(DBN_NETWORK_FILENAME)
     mlp_network: MLPClassifier = joblib.load(MLP_NETWORK_FILENAME)
-    first_position = dbn_network.transform(X[0])
-    second_position = dbn_network.transform(X[1])
+    first_position = dbn_network.transform(First)
+    second_position = dbn_network.transform(Second)
     X = np.concatenate((first_position, second_position))
     X = dbn_network.transform(X.reshape(1, -1))
     result = mlp_network.predict(X)
-    return result
+    return list(result)
 
 
 def extract_mlp_data(data):
@@ -127,6 +130,13 @@ def test_mlp(X, Y):
 
 
 def main():
+    if argv[1] == 'predict':
+        first = list(map(int, argv[2][1:-1].split(', ')))
+        second = list(map(int, argv[3][1:-1].split(', ')))
+        result = predict_mlp(first, second)
+        print(str(result))
+        exit(0)
+
     dbn_data, mlp_data, mlp_labels = gather_data()
     print("Splitting data in Training and Test Data...")
     X_train, X_test, Y_train, Y_test = train_test_split(
