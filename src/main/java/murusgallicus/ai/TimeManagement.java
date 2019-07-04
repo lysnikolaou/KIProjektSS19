@@ -18,6 +18,10 @@ class TimeManagement {
             return timeLeft / (20 - movesSincePanic++);
         }
 
+        if (numberOfMovesPlayed < firstEasyMoves) {
+            return 1200L;
+        }
+
         int outOfOpeningMoves = Math.max(0, numberOfMovesPlayed - firstEasyMoves);
         int nMoves = Math.min(outOfOpeningMoves, midGameMoves);
         double factor = 2 - nMoves / 10;
